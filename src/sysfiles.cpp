@@ -19,6 +19,7 @@ void Sysfiles::printDirectory(char* path){
 }
 
 void Sysfiles::createDirectory(char* directoryName){
+  mkdir(directoryName, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
 
 }
 
@@ -29,6 +30,7 @@ void Sysfiles::createSizedFile(char* fileName, int sizeBytes){
     fclose(fp);
 }
 
-void Sysfiles::deleteFile(char* fileName){
-
+void Sysfiles::deleteFile(char* directoryName){
+  std::string command = std::string("rm -R ") + directoryName;
+  system(command.c_str());
 }
