@@ -22,7 +22,7 @@ void Sysfiles::createDirectory(char* directoryName){
 
 }
 
-void Sysfiles::createFile(char* fileName, int sizeBytes){
+void Sysfiles::createSizedFile(char* fileName, int sizeBytes){
     FILE *fp = fopen(fileName, "w");
     fseek(fp, sizeBytes-1 , SEEK_SET);
     fputc('\0', fp);

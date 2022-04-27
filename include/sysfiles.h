@@ -11,7 +11,7 @@ class Sysfiles {
   public:
     static void printDirectory(char* path);
     static void createDirectory(char* directoryName);
-    static void createFile(char* fileName, int sizeBytes);
+    static void createSizedFile(char* fileName, int sizeBytes);
     static void deleteFile(char* fileName);
 };
 
