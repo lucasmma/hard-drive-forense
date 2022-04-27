@@ -1,1 +1,3 @@
-bin/main.o: src/main.cpp
+bin/main.o: src/main.cpp src/../include/sysfiles.h
+
+src/../include/sysfiles.h:
