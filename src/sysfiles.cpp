@@ -22,8 +22,11 @@ void Sysfiles::createDirectory(char* directoryName){
 
 }
 
-void Sysfiles::createFile(char* fileName){
-
+void Sysfiles::createFile(char* fileName, int sizeBytes){
+    FILE *fp = fopen(fileName, "w");
+    fseek(fp, sizeBytes-1 , SEEK_SET);
+    fputc('\0', fp);
+    fclose(fp);
 }
 
 void Sysfiles::deleteFile(char* fileName){

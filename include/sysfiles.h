@@ -5,12 +5,13 @@
 #include <iostream>
 #include <fstream>
 #include <dirent.h>
+#include <stdio.h>
 
 class Sysfiles {
   public:
     static void printDirectory(char* path);
     static void createDirectory(char* directoryName);
-    static void createFile(char* fileName);
+    static void createFile(char* fileName, int sizeBytes);
     static void deleteFile(char* fileName);
 };
 
