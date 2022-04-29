@@ -14,8 +14,13 @@ class Fat32 {
     Fat32(char* directoryFile);
     ~Fat32();
     void readDisk(char* directoryName);
-    void print();
+    void printSector(int offSet);
+    void fillInfo();
     std::fstream hardDrive;
+    // int bytesPerSector;
+    // int hardDrive;
+    // int hardDrive;
+    // int hardDrive;
 };
 
 #endif
