@@ -4,18 +4,16 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <dirent.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/stat.h>
+#include <cstdio>
 #include <cstdlib>
-#include <unistd.h> 
 #include <fstream>
 #include <cerrno>
 #include <stdexcept>
 #include <vector>
 #include <algorithm>
 #include "utils.h"
+#include <Windows.h>
+#include <filesystem>
 
 #define MAX_FILES 65534;
 

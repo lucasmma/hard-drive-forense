@@ -1,87 +1,23 @@
-CC = g++
-RMDIR = rm -rf
-RM = rm -f
+CFLAGS=/W4 /EHsc /std:c++17 /Iinclude /utf-8 /nologo
 
-RUN = ./
+LIB_NAMES=sysfiles utils
+LIBS=$(patsubst %,obj\\%.obj,$(LIB_NAMES))
 
-DEP_FLAGS = -MT $@ -MMD -MP -MF $(DEP_PATH)/$*.d
+all: dirs main
 
-DIRECTIVES = -std=c++11 -Wall -Wextra -c -I $(HEADER_PATH) 
+main: src\main.cpp $(LIBS)
+    cl $(CFLAGS) /DDISKEXP /Fo:obj\ /Fe:main.exe $?
 
-LIBS =
+obj\sysfiles.obj::            src\$(@B).cpp include\$(@B).h
+    cl $(CFLAGS) /c /Fo:obj\ src\$(@B).cpp
 
-HEADER_PATH = include
-SRC_PATH = src
-BIN_PATH = bin
-DEP_PATH = dep
+obj\utils.obj::      src\$(@B).cpp include\$(@B).h
+    cl $(CFLAGS) /c /Fo:obj\ src\$(@B).cpp
 
-CPP_FILES = $(wildcard $(SRC_PATH)/*.cpp)
-OBJ_FILES = $(addprefix $(BIN_PATH)/,$(notdir $(CPP_FILES:.cpp=.o)))
-DEP_FILES = $(wildcard $(DEP_PATH)/*.d)
-
-EXEC = trab3
-
-ifeq ($(OS),Windows_NT)
-
-RMDIR = rd /s /q
-RM = del
-
-RUN =
-
-SDL_PATH = C:\SDL2-2.0.9\x86_64-w64-mingw32
-
-DIRECTIVES += -I $(SDL_PATH)\include
-
-LIBS = 
-
-EXEC := $(EXEC).exe
-
-else
-UNAME_S := $(shell uname -s)
-
-ifeq ($(UNAME_S), Darwin)
-LIBS =
-endif
-endif
-
-all: $(EXEC)
-
-$(EXEC): $(OBJ_FILES)
-	$(CC) -o $@ $^ -pthread -lrt$(LIBS)
-
-$(BIN_PATH)/%.o: $(SRC_PATH)/%.cpp
-
-ifeq ($(OS), Windows_NT)
-	@if not exist $(DEP_PATH) @mkdir $(DEP_PATH)
-	@if not exist $(BIN_PATH) @mkdir $(BIN_PATH)
-else
-	@mkdir -p $(DEP_PATH) $(BIN_PATH)
-endif
-
-	$(CC) $(DEP_FLAGS) -c -o $@ $< $(DIRECTIVES)
-
-print-% : ; @echo $* = $($*)
-
-debug: DIRECTIVES += -ggdb -O0 -DDEBUG
-debug: all
-
-dev: debug run
-
-gdb: RUN := gdb $(RUN)
-gdb: dev
-
-release: DIRECTIVES += -Ofast -mtune=native
-release: all
-
-run:
-	$(RUN)$(EXEC)
+dirs:
+    (IF NOT EXIST obj (MKDIR obj))
 
 clean:
-	$(RMDIR) $(BIN_PATH) $(DEP_PATH)
-	$(RM) $(EXEC)
-
-.PRECIOUS: $(DEP_PATH)/%.D
-
-.PHONY: debug clean release
-
--include $(DEP_FILES)
+    FOR %I IN (obj\*) DO @((echo Removing file %I) & (del %I))
+    IF EXIST obj (rmdir obj)
+.PHONY: clean

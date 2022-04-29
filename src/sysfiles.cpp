@@ -1,30 +1,17 @@
 #include "../include/sysfiles.h"
 
 void Sysfiles::printDirectory(char* path){
-  if (auto dir = opendir(path)) {
-    while (auto f = readdir(dir)) {
-        if (!f->d_name || f->d_name[0] == '.')
-          continue; // Skip everything that starts with a dot
-        
-        if (f->d_type == DT_DIR ){
-          printf("Directory: %s\n", f->d_name);
-          /* code */
-        } else{
-          printf("File: %s\n", f->d_name);
-        }
-        
-    }
-    closedir(dir);
-  }
+  for (const auto & entry : std::filesystem::directory_iterator(path))
+        std::cout << entry.path() << std::endl;
 }
 
 void Sysfiles::changeDirectory(char* directoryName){
- chdir(directoryName);
+  std::filesystem::current_path(directoryName);
 }
 
 void Sysfiles::createDirectory(char* directoryName){
-  mkdir(directoryName, S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH);
-
+  std::string directory_name(directoryName);
+  std::filesystem::create_directory(directory_name);
 }
 
 void Sysfiles::createSizedFile(char* fileName, int sizeBytes){

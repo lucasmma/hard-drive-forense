@@ -1,3 +1,10 @@
 {
-  "C_Cpp.errorSquiggles": "Disabled"
+  "C_Cpp.errorSquiggles": "Disabled",
+  "terminal.integrated.profiles.windows": {
+    "x64 Native Tools Command Prompt for VS 2022" : {
+      "path": "C:\\WINDOWS\\System32\\cmd.exe",
+      "args": ["/k", "F:\\Computer\\MicrosoftVisualStudio2022\\program\\VC\\Auxiliary\\Build\\vcvarsamd64_x86.bat"]
+    }
+  },
+  "terminal.integrated.defaultProfile.windows": "x64 Native Tools Command Prompt for VS 2022",
 }
