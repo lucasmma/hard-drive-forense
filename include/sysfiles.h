@@ -11,9 +11,10 @@
 #include <stdexcept>
 #include <vector>
 #include <algorithm>
-#include "utils.h"
 #include <Windows.h>
 #include <filesystem>
+#include "utils.h"
+#include "fat32.h"
 
 #define MAX_FILES 65534;
 
