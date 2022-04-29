@@ -69,6 +69,7 @@ int main (int argc, char const **argv) {
     Fat32 *fat = new Fat32(hardDrivePath);
 
     fat->printSector(0);
+    fat->printFatInfos();
 
 
     // *((unsigned short*)(&buffer[11]))
