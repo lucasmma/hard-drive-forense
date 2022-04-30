@@ -93,11 +93,11 @@ void Fat32::fillInfo(){
 }
 
 int Fat32::findArchiveOffset(std::deque<std::string> pathFileName, bool isDeleted, int clusterOffSet){
-  int initialOffSet = clusterOffSet;
+  int initialClusterOffSet = clusterOffSet;
   if(clusterOffSet == 0){
-    initialOffSet = offSetRootDirectory;
+    initialClusterOffSet = offSetRootDirectory;
   }
-  char* rootDirectory = readCluster(initialOffSet);
+  char* rootDirectory = readCluster(initialClusterOffSet);
   for (int i = 0; i < 512*SECTOR_PER_CLUSTER/32; i++){
     char bufferName[12];
     char bitFieldAttribute = *((unsigned char*)(&rootDirectory[i * 32 + 11]));
@@ -125,16 +125,20 @@ int Fat32::findArchiveOffset(std::deque<std::string> pathFileName, bool isDelete
       printf("Bit Attribute: %02X\n", bitFieldAttribute);
       printf("Starting Cluster Area: %d\n", startingClusterArea);
       printf("Bytes Size: %d\n", fileSize);
-      printf("Starting File Address: %d\n\n", startingFileAddress);
+      printf("Starting File Address: %d\n", startingFileAddress);
+      printf("Cluster offset: %d\n\n", initialClusterOffSet);
       printf("--------------------------------------\n");
+      if(pathFileName.size() == 0){
+        return startingFileAddress;
+      }
       return findArchiveOffset(pathFileName, isDeleted, startingFileAddress);
     }
   }
-  std::cout << "N fat -> " << getFatNfromOffset(initialOffSet) << std::endl;
-  int numberInFat = getIntFromFatN(getFatNfromOffset(initialOffSet));
+  std::cout << "N fat -> " << getFatNfromOffset(initialClusterOffSet) << std::endl;
+  int numberInFat = getIntFromFatN(getFatNfromOffset(initialClusterOffSet));
   std::cout << "Number in Fat -> " << numberInFat << std::endl;
   if(numberInFat == END_OF_FILE){
-    return clusterOffSet;
+    return NOT_FOUND;
   } else {
     int nextCluserOffset = (numberInFat - 2) * bytesPerCluster + offSetRootDirectory;
     return findArchiveOffset(pathFileName, isDeleted, nextCluserOffset);

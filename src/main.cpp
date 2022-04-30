@@ -74,7 +74,9 @@ int main (int argc, char const **argv) {
     }
     
     fat->printFatInfos();
-    fat->findArchiveOffset(Utils::parsePath("pasta/ola.txt"), false);
+    char* filePath = "pasta/ola.txt";
+    int initialOffSet = fat->findArchiveOffset(Utils::parsePath(filePath), false);
+    std::cout << "OffSet Inicial do arquivo " << filePath << " --> " << initialOffSet << std::endl;
 
     // char* buffer = fat->readSector(0);
     // fat->writeSector(16782336, buffer);

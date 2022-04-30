@@ -20,6 +20,7 @@
 #define MAX_FILES 65534
 #define SECTOR_PER_CLUSTER 2
 #define END_OF_FILE 268435455
+#define NOT_FOUND 0
 
 
 class Sysfiles {
