@@ -73,18 +73,23 @@ void Fat32::fillInfo(){
   offSetFat2 = bytesPerSector * (countSectorReserved + countSectorPerFat);
 }
 
-int Fat32::findArchiveOffset(char* pathFileName){
+int Fat32::findArchiveOffset(std::deque<std::string> pathFileName){
   char* rootDirectory = readSector(offSetRootDirectory);
   printSector(offSetRootDirectory);
   for (int i = 0; i < 512/32; i++){
-    char bufferName[9];
-    char bitFieldAttribute = *((unsigned char*)(&rootDirectory[i * 32 + 12]));
+    char bufferName[12];
+    char bitFieldAttribute = *((unsigned char*)(&rootDirectory[i * 32 + 11]));
     int startingClusterArea = *((unsigned short*)(&rootDirectory[i * 32 + 26]));
     int fileSize = *((unsigned int*)(&rootDirectory[i * 32 + 28]));
     int startingFileAddress = (startingClusterArea - 2) * bytesPerCluster + offSetRootDirectory;
-    memcpy(bufferName, &rootDirectory[i*32], 8);
-    bufferName[8] = 0;
-    if(bufferName[0] != 0){
+    if(pathFileName.size() != 1){
+      memcpy(bufferName, &rootDirectory[i*32], 8);
+      bufferName[8] = 0;
+    } else {
+      memcpy(bufferName, &rootDirectory[i*32], 11);
+      bufferName[11] = 0;
+    }
+    if(strcmp(bufferName, pathFileName[0].c_str()) == 0){
       printf("Name: %s -> HEX: %02X\n", bufferName, *((unsigned int*)(&bufferName)));
       printf("Bit Attribute: %02X\n", bitFieldAttribute);
       printf("Starting Cluster Area: %d\n", startingClusterArea);

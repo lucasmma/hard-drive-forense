@@ -1,15 +1,15 @@
 #include "../include/utils.h"
 
-char* Utils::stringToChar(std::string phrase){
-  return const_cast<char*>(phrase.c_str());
+const char* Utils::stringToChar(std::string phrase){
+  return phrase.c_str();
 }
 
 bool Utils::contains(std::vector<int> c, int e) { 
     return std::find(c.begin(), c.end(), e) != c.end();
 }
 
-std::vector<std::string> Utils::parsePath(char* pathFilename){
-  std::vector<std::string> pathParsed;
+std::deque<std::string> Utils::parsePath(char* pathFilename){
+  std::deque<std::string> pathParsed;
   std::filesystem::path path(pathFilename);
   int x = 0;
   int j = 0;

@@ -38,7 +38,7 @@ void setupPendrive() {
   //create 5 subdirectories with files
   for (int i = 0; i < 5; i++) {
     std::string dirName = baseDirectoryName + std::to_string(i);
-    char* dirNameChar = Utils::stringToChar(dirName);
+    const char* dirNameChar = Utils::stringToChar(dirName);
     Sysfiles::createDirectory(dirNameChar);
     Sysfiles::changeDirectory(dirNameChar);
     for (int j = 0; j < 371; j++) {
@@ -51,7 +51,7 @@ void setupPendrive() {
   Sysfiles::changeDirectory("SD1");
   for (int i = 0; i < 3; i++){
     std::string dirNameBase = "SD1.";
-    char* dirNameChar = Utils::stringToChar(dirNameBase + std::to_string(i));
+    const char* dirNameChar = Utils::stringToChar(dirNameBase + std::to_string(i));
     Sysfiles::createDirectory(dirNameChar);
   }
   Sysfiles::changeDirectory("..");
@@ -67,15 +67,14 @@ int main (int argc, char const **argv) {
   //  seekp para escrever
   try {
     Fat32 *fat = new Fat32(hardDrivePath);
-    std::vector<std::string> teste = Utils::parsePath("ola/pasta/ola.txt");
-    
+    std::deque<std::string> teste = Utils::parsePath("pasta/ola.txt");
     for(const std::string &i: teste){
       // std::cout << i << std::endl;
       printf("\033[7m%s\033[27m\n", i.c_str());
     }
     
     // fat->printFatInfos();
-    // fat->findArchiveOffset();
+    fat->findArchiveOffset(Utils::parsePath("pasta/ola.txt"));
 
     // char* buffer = fat->readSector(0);
     // fat->writeSector(16782336, buffer);

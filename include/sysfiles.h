@@ -2,6 +2,7 @@
 #define SYSFILES_H
 
 #include <vector>
+#include <deque>
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -21,11 +22,11 @@
 
 class Sysfiles {
   public:
-    static void printDirectory(char* path);
-    static void changeDirectory(char* directoryName);
-    static void createDirectory(char* directoryName);
-    static void createSizedFile(char* fileName, int sizeBytes);
-    static void deleteFile(char* directoryName);
+    static void printDirectory(const char* path);
+    static void changeDirectory(const char* directoryName);
+    static void createDirectory(const char* directoryName);
+    static void createSizedFile(const char* fileName, int sizeBytes);
+    static void deleteFile(const char* directoryName);
 };
 
 

@@ -20,7 +20,7 @@ class Fat32 {
     void fillInfo();
     void setUpFat();
     void printFatInfos();
-    int findArchiveOffset(char* pathFileName);
+    int findArchiveOffset(std::deque<std::string> pathFileName);
     char* dirName;
     std::fstream hardDrive;
     int bytesPerCluster;
