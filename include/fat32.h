@@ -1,4 +1,4 @@
-#ifndef SYSFILES_Hs
+#ifndef SYSFILES_H
     #include "sysfiles.h"
 #endif
 
@@ -20,6 +20,7 @@ class Fat32 {
     void fillInfo();
     void setUpFat();
     void printFatInfos();
+    int findArchiveOffset(char* pathFileName);
     char* dirName;
     std::fstream hardDrive;
     int bytesPerCluster;
@@ -30,6 +31,8 @@ class Fat32 {
     int offSetRootDirectory;
     int offSetFat1;
     int offSetFat2;
+  private:
+    char _currentBuffer[512];
 };
 
 #endif

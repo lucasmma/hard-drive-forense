@@ -67,10 +67,19 @@ int main (int argc, char const **argv) {
   //  seekp para escrever
   try {
     Fat32 *fat = new Fat32(hardDrivePath);
+    std::vector<std::string> teste = Utils::parsePath("ola/pasta/ola.txt");
+    
+    for(const std::string &i: teste){
+      // std::cout << i << std::endl;
+      printf("\033[7m%s\033[27m\n", i.c_str());
+    }
+    
+    // fat->printFatInfos();
+    // fat->findArchiveOffset();
 
-    fat->printSector(0);
-    fat->printFatInfos();
-
+    // char* buffer = fat->readSector(0);
+    // fat->writeSector(16782336, buffer);
+    // std::cout << 16782336 << std::endl;
 
     // *((unsigned short*)(&buffer[11]))
     // char* buffer1 = new char[512];

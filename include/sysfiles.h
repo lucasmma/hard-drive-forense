@@ -1,17 +1,18 @@
 #ifndef SYSFILES_H
 #define SYSFILES_H
 
+#include <vector>
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <cstdio>
 #include <cstdlib>
+#include <ctype.h>
 #include <cerrno>
 #include <stdexcept>
-#include <vector>
 #include <algorithm>
-// #include <Windows.h>
 #include <filesystem>
+// #include <Windows.h>
 #include "utils.h"
 #include "fat32.h"
 

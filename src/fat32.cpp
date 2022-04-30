@@ -22,16 +22,17 @@ void Fat32::printFatInfos(){
   std::cout << "Numero de Setores Reservado " << countSectorReserved << std::endl;
   std::cout << "Numero de Setores por FAT " << countSectorPerFat << std::endl;
   std::cout << "Bytes por Cluster " << bytesPerCluster << std::endl;
-  std::cout << "Offset ate Root Directory " << offSetRootDirectory << std::endl;
   std::cout << "Offset do FAT1 " << offSetFat1 << std::endl;
   std::cout << "Offset do FAT2 " << offSetFat2 << std::endl;
+  std::cout << "Offset ate Root Directory " << offSetRootDirectory << std::endl;
   std::cout << "-------------------------------------------------------------------" << std::endl;
 }
 
 void Fat32::printSector(int offSet){
   char* buffer = readSector(offSet);
   std::cout << std::endl << std::endl;
-  std::cout << "-------------------------------------------------------------------";
+  std::cout << "-------------------------------------------------------------------" << std::endl;
+  std::cout << "Starting offSET " << offSet << std::endl;
   std::cout << std::endl << std::endl << "    ";
   for (int x = 0; x < 16; x++){
     std::cout<< ((x <= 9) ? "0" : "") << (x) << " ";
@@ -50,15 +51,14 @@ void Fat32::printSector(int offSet){
 }
 
 char* Fat32::readSector(int offSet){
-  char buffer[512];
   hardDrive.seekg(offSet, std::ios_base::beg);
-  hardDrive.read(&buffer[0], 512);
-  return buffer;
+  hardDrive.read(&_currentBuffer[0], 512);
+  return _currentBuffer;
 }
 
 void Fat32::writeSector(int offSet, char* bufferSector){
   hardDrive.seekp(offSet, std::ios_base::beg);
-  hardDrive.write(buffer, 512);
+  hardDrive.write(bufferSector, 512);
 }
 
 void Fat32::fillInfo(){
@@ -71,6 +71,29 @@ void Fat32::fillInfo(){
   offSetRootDirectory = bytesPerSector * (countSectorReserved + (countSectorPerFat * 2));
   offSetFat1 = bytesPerSector * countSectorReserved;
   offSetFat2 = bytesPerSector * (countSectorReserved + countSectorPerFat);
+}
+
+int Fat32::findArchiveOffset(char* pathFileName){
+  char* rootDirectory = readSector(offSetRootDirectory);
+  printSector(offSetRootDirectory);
+  for (int i = 0; i < 512/32; i++){
+    char bufferName[9];
+    char bitFieldAttribute = *((unsigned char*)(&rootDirectory[i * 32 + 12]));
+    int startingClusterArea = *((unsigned short*)(&rootDirectory[i * 32 + 26]));
+    int fileSize = *((unsigned int*)(&rootDirectory[i * 32 + 28]));
+    int startingFileAddress = (startingClusterArea - 2) * bytesPerCluster + offSetRootDirectory;
+    memcpy(bufferName, &rootDirectory[i*32], 8);
+    bufferName[8] = 0;
+    if(bufferName[0] != 0){
+      printf("Name: %s -> HEX: %02X\n", bufferName, *((unsigned int*)(&bufferName)));
+      printf("Bit Attribute: %02X\n", bitFieldAttribute);
+      printf("Starting Cluster Area: %d\n", startingClusterArea);
+      printf("Bytes Size: %d\n", fileSize);
+      printf("Starting File Address: %d\n\n", startingFileAddress);
+      printf("--------------------------------------\n");
+    }
+  }
+  return 0;
 }
 
 void Fat32::readDisk(){
