@@ -16,11 +16,14 @@ class Fat32 {
     void readDisk();
     void printSector(int offSet);
     char* readSector(int offSet);
+    char* readCluster(int offSet);
+    int getFatNfromOffset(int offSet);
+    int getIntFromFatN(int offSet);
     void writeSector(int offSet, char* bufferSector);
     void fillInfo();
     void setUpFat();
     void printFatInfos();
-    int findArchiveOffset(std::deque<std::string> pathFileName);
+    int findArchiveOffset(std::deque<std::string> pathFileName, bool isDeleted, int clusterOffSet = 0);
     char* dirName;
     std::fstream hardDrive;
     int bytesPerCluster;

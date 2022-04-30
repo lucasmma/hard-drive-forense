@@ -56,9 +56,28 @@ char* Fat32::readSector(int offSet){
   return _currentBuffer;
 }
 
+char* Fat32::readCluster(int offSet){
+  static char cluster[SECTOR_PER_CLUSTER * 512];
+  for(int i = 0; i < SECTOR_PER_CLUSTER; i ++){
+    memcpy(&cluster[i*512], readSector(offSet + (i * 512)), 512);
+  }
+  return cluster;
+}
+
 void Fat32::writeSector(int offSet, char* bufferSector){
   hardDrive.seekp(offSet, std::ios_base::beg);
   hardDrive.write(bufferSector, 512);
+}
+
+int Fat32::getFatNfromOffset(int offSet){
+  return (int)((offSet - offSetRootDirectory) / bytesPerCluster) + 2;
+}
+
+int Fat32::getIntFromFatN(int n){
+  int offSetSector = (n*4) + offSetFat1 - (((n*4) + offSetFat1) % 512);
+  std::cout << offSetSector << std::endl;
+  char* fatSector = readSector(offSetSector);
+  return *((unsigned int*)(&fatSector[n*4]));
 }
 
 void Fat32::fillInfo(){
@@ -73,15 +92,19 @@ void Fat32::fillInfo(){
   offSetFat2 = bytesPerSector * (countSectorReserved + countSectorPerFat);
 }
 
-int Fat32::findArchiveOffset(std::deque<std::string> pathFileName){
-  char* rootDirectory = readSector(offSetRootDirectory);
-  printSector(offSetRootDirectory);
-  for (int i = 0; i < 512/32; i++){
+int Fat32::findArchiveOffset(std::deque<std::string> pathFileName, bool isDeleted, int clusterOffSet){
+  int initialOffSet = clusterOffSet;
+  if(clusterOffSet == 0){
+    initialOffSet = offSetRootDirectory;
+  }
+  char* rootDirectory = readCluster(initialOffSet);
+  for (int i = 0; i < 512*SECTOR_PER_CLUSTER/32; i++){
     char bufferName[12];
     char bitFieldAttribute = *((unsigned char*)(&rootDirectory[i * 32 + 11]));
     int startingClusterArea = *((unsigned short*)(&rootDirectory[i * 32 + 26]));
     int fileSize = *((unsigned int*)(&rootDirectory[i * 32 + 28]));
     int startingFileAddress = (startingClusterArea - 2) * bytesPerCluster + offSetRootDirectory;
+    char bufferFilename[11];
     if(pathFileName.size() != 1){
       memcpy(bufferName, &rootDirectory[i*32], 8);
       bufferName[8] = 0;
@@ -89,16 +112,33 @@ int Fat32::findArchiveOffset(std::deque<std::string> pathFileName){
       memcpy(bufferName, &rootDirectory[i*32], 11);
       bufferName[11] = 0;
     }
-    if(strcmp(bufferName, pathFileName[0].c_str()) == 0){
+    if(isDeleted && pathFileName.size() == 1){
+      strcpy(bufferFilename, pathFileName[0].c_str());
+      bufferFilename[0] = 0xE5;
+    } else{
+      strcpy(bufferFilename, pathFileName[0].c_str());
+    }
+    if(strcmp(bufferName, bufferFilename) == 0){
+      // ACHOU
+      pathFileName.pop_front();
       printf("Name: %s -> HEX: %02X\n", bufferName, *((unsigned int*)(&bufferName)));
       printf("Bit Attribute: %02X\n", bitFieldAttribute);
       printf("Starting Cluster Area: %d\n", startingClusterArea);
       printf("Bytes Size: %d\n", fileSize);
       printf("Starting File Address: %d\n\n", startingFileAddress);
       printf("--------------------------------------\n");
+      return findArchiveOffset(pathFileName, isDeleted, startingFileAddress);
     }
   }
-  return 0;
+  std::cout << "N fat -> " << getFatNfromOffset(initialOffSet) << std::endl;
+  int numberInFat = getIntFromFatN(getFatNfromOffset(initialOffSet));
+  std::cout << "Number in Fat -> " << numberInFat << std::endl;
+  if(numberInFat == END_OF_FILE){
+    return clusterOffSet;
+  } else {
+    int nextCluserOffset = (numberInFat - 2) * bytesPerCluster + offSetRootDirectory;
+    return findArchiveOffset(pathFileName, isDeleted, nextCluserOffset);
+  }
 }
 
 void Fat32::readDisk(){

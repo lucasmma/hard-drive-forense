@@ -73,8 +73,8 @@ int main (int argc, char const **argv) {
       printf("\033[7m%s\033[27m\n", i.c_str());
     }
     
-    // fat->printFatInfos();
-    fat->findArchiveOffset(Utils::parsePath("pasta/ola.txt"));
+    fat->printFatInfos();
+    fat->findArchiveOffset(Utils::parsePath("pasta/ola.txt"), false);
 
     // char* buffer = fat->readSector(0);
     // fat->writeSector(16782336, buffer);
