@@ -83,7 +83,7 @@ void findOffsetOfFile(Fat32* fat, char* path, bool isDeleted = false){
 }
 
 int main (int argc, char const **argv) {
-  char* hardDrivePath = "\\\\.\\E:";
+  WCHAR* hardDrivePath = L"\\\\.\\E:";
   //  seekg para ler 
   //  seekp para escrever
 
@@ -106,7 +106,7 @@ int main (int argc, char const **argv) {
         setupPendrive();
         std::cout << "Pendrive cheio" << std::endl;  
       } else if (number == 1){
-        fillDirectory("\\\\.\\E:\\pasta1\\", 1000000);
+        fillDirectory(std::string(PENDRIVE_PATH) + "\\pasta1\\", 1000000);
       } else if (number == 2){
         std::cout << std::endl;
         fat->printFatInfos();
@@ -118,10 +118,10 @@ int main (int argc, char const **argv) {
         fat->undeleteFile(tmp);
       } else if (number == 4){
         char tmp[50];
-        // std::cout << "Digite o path do arquivo: ";
-        // std::cin >> tmp;
+        std::cout << "Digite o path do arquivo: ";
+        std::cin >> tmp;
         // findOffsetOfFile(fat, "pasta1/pasta2/pasta3/ola.txt");
-        findOffsetOfFile(fat, "pasta1/66712.txt");
+        findOffsetOfFile(fat, tmp);
       } else if (number == 5){
         exit = true;
         std::cout << "Good Bye!" << std::endl; 

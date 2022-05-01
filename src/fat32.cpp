@@ -1,13 +1,20 @@
 #include "../include/fat32.h"
 
-Fat32::Fat32(char* directoryName){
-  dirName = directoryName;
-  setUpFat();
+Fat32::Fat32(WCHAR* directoryName){
+  dirName = PENDRIVE_PATH;
+  std::cout << dirName << std::endl;
+  setUpFat(directoryName);
 }
 
-void Fat32::setUpFat(){
+
+
+void Fat32::setUpFat(WCHAR* directoryName){
   readDisk();
   fillInfo();
+  _device = CreateFileW(directoryName, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+  if(_device == INVALID_HANDLE_VALUE) {
+    std::cout << "Handle nao criado" << std::endl;
+  }
 }
 
 Fat32::~Fat32(){
@@ -49,6 +56,27 @@ void Fat32::printSector(int offSet){
   std::cout << std::endl << std::endl;
 }
 
+void Fat32::printSector(char* buffer){
+  std::cout << std::endl << std::endl;
+  std::cout << "-------------------------------------------------------------------" << std::endl;
+  std::cout << "Buffer " << std::endl;
+  std::cout << std::endl << std::endl << "    ";
+  for (int x = 0; x < 16; x++){
+    std::cout<< ((x <= 9) ? "0" : "") << (x) << " ";
+  }
+  std::cout << std::endl;
+  for (int i = 0; i < 32; i++){
+    printf("%s%s%d ",(i*16 <= 99) ? "0" : "",(i*16 <= 9) ? "0" : "", i*16);
+    for (int j = 0; j < 16; j++){
+      printf("%02X ", *((unsigned char*)&buffer[(i*16) + j]));
+    }
+    printf("\n");
+  }
+  std::cout << std::endl << std::endl;
+  std::cout << "-------------------------------------------------------------------";
+  std::cout << std::endl << std::endl;
+}
+
 char* Fat32::readSector(int offSet){
   hardDrive.seekg(offSet, std::ios_base::beg);
   hardDrive.read(&_currentBuffer[0], 512);
@@ -63,13 +91,40 @@ char* Fat32::readCluster(int offSet){
   return cluster;
 }
 
-void Fat32::writeSector(int offSet, char* bufferSector){
-  hardDrive.seekp(offSet, std::ios_base::beg);
-  hardDrive.write(bufferSector, 512);
+void Fat32::printCluster(char* bufferCluster){
+  printSector(bufferCluster);
+  printSector(&bufferCluster[512]);
 }
 
+void Fat32::writeSector(int offSet, char* bufferSector){
+  DWORD returned;
+  if (!DeviceIoControl(_device, FSCTL_DISMOUNT_VOLUME,
+      NULL, 0, NULL, 0, &returned, NULL)){
+      DWORD err = GetLastError();
+      printf("Error %d attempting to dismount volume, error code\n",err);
+  }
+  if(!DeviceIoControl(_device, FSCTL_LOCK_VOLUME, NULL, 0, NULL, 0, &returned, NULL)){
+    DWORD err = GetLastError();
+    printf("Error %d attempting to lock volume, error code\n",err);
+  }
+
+  SetFilePointer(_device, offSet, NULL, FILE_BEGIN);
+  WriteFile(_device, bufferSector, 512, &returned, NULL);
+
+  if(!DeviceIoControl(_device, FSCTL_UNLOCK_VOLUME, NULL, 0, NULL, 0, &returned, NULL)){
+    DWORD err = GetLastError();
+    printf("Error %d attempting to unlock volume, error code\n",err);
+  }
+}
+
+void Fat32::writeCluster(int offSet, char* bufferCluster){
+  writeSector(offSet, bufferCluster);
+  writeSector(offSet + 512, &bufferCluster[512]);
+}
+
+
 int Fat32::getFatNfromOffset(int offSet){
-  return (int)((offSet - offSetRootDirectory) / bytesPerCluster) + 2;
+  return (unsigned int)((offSet - offSetRootDirectory) / bytesPerCluster) + 2;
 }
 
 int Fat32::getIntFromFatN(int n){
@@ -120,11 +175,13 @@ FileInfo Fat32::findArchiveOffset(std::deque<std::string> pathFileName, bool isD
       // ACHOU
       pathFileName.pop_front();
       if(DEBUG){
+        printf("Offset do cluster: %d\n", initialClusterOffSet);
         printf("Index no cluster: %d\n", i*32 + initialClusterOffSet);
         printf("Name: %s -> HEX: %02X\n", fileInfo.filename, *((unsigned long long*)(&fileInfo.filename)));
         printf("Bit Attribute: %02X\n", fileInfo.bitFieldAttribute);
         printf("Starting Cluster Area: %d\n", fileInfo.startingClusterArea);
         printf("Bytes Size: %d\n", fileInfo.fileSize);
+        std::cout << "Bytes Size > 0: " << (fileInfo.fileSize > 0) << std::endl;
         printf("Starting File Address: %d\n", fileInfo.startingFileAddress);
         printf("--------------------------------------\n");
       }
@@ -132,7 +189,8 @@ FileInfo Fat32::findArchiveOffset(std::deque<std::string> pathFileName, bool isD
         if(DEBUG){
           printf("Endereco do arquivo -> %d\n", fileInfo.startingFileAddress);
         }
-        fileInfo.clusterIndex = i*32 + initialClusterOffSet;
+        fileInfo.initialClusterOffSet = initialClusterOffSet;
+        fileInfo.clusterIndex = i*32;
         return fileInfo;
       }
       return findArchiveOffset(pathFileName, isDeleted, fileInfo.startingFileAddress);
@@ -159,21 +217,44 @@ void Fat32::undeleteFile(char* filename){
   // para recuperar um arquivo pequeno
   // achar o offset
   FileInfo fileInfo = findArchiveOffset(Utils::parsePath(filename), true);
+  if(fileInfo.startingFileAddress == NOT_FOUND){
+    std::cout << "Arquivo não encontrado" << std::endl;
+    return;
+  }
   // ler o cluster do arquivo
-  char* archiveCluster = readCluster(fileInfo.startingClusterArea);
+  char* archiveCluster = readCluster(fileInfo.initialClusterOffSet);
   archiveCluster[fileInfo.clusterIndex] = Utils::parsePath(filename).back()[0];
+  std::cout << "Initial cluster off set" << fileInfo.initialClusterOffSet << std::endl; 
+  std::cout << "Cluster Index " << fileInfo.clusterIndex << std::endl; 
+  printCluster(archiveCluster);
   // escrever o cluster do arquivo
-
-  // escrever na fat se é o fim do arquivo ou não
+  writeCluster(fileInfo.initialClusterOffSet, archiveCluster);
+  // // escrever na fat se é o fim do arquivo ou não
+  int nOffset = getFatNfromOffset(fileInfo.initialClusterOffSet);
+  int fat1ClusterOffset = (nOffset*4) + offSetFat1 - (((nOffset*4) + offSetFat1) % 512);
+  int fat2ClusterOffset = (nOffset*4) + offSetFat2 - (((nOffset*4) + offSetFat2) % 512);
+  char* fatCluster = readCluster(fat1ClusterOffset);
+  std::cout << "Numero do offset " << nOffset << std::endl;
+  std::cout << "Numero do offset do fat 1 " << fat1ClusterOffset << std::endl;
+  std::cout << "Numero do offset do fat 2 " << fat2ClusterOffset << std::endl;
+  std::cout << "Numero do index do fat " << ((nOffset*4) + offSetFat1) % 512 << std::endl;
+  // printCluster(fatCluster);
+  fatCluster[((nOffset*4) + offSetFat1) % 512] = 0xff;
+  fatCluster[((nOffset*4) + offSetFat1) % 512 + 1] = 0xff;
+  fatCluster[((nOffset*4) + offSetFat1) % 512 + 2] = 0xff;
+  fatCluster[((nOffset*4) + offSetFat1) % 512 + 3] = 0x0F;
+  // printCluster(fatCluster);
+  writeCluster(fat1ClusterOffset, fatCluster);
+  writeCluster(fat2ClusterOffset, fatCluster);
 
 }
 
 void Fat32::readDisk(){
   std::fstream disk;
-  hardDrive.open(dirName, std::fstream::in | std::fstream::out | std::fstream::binary);
+  hardDrive.open(PENDRIVE_PATH, std::fstream::in | std::fstream::out | std::fstream::binary);
 
   if(!hardDrive)
-    throw(std::runtime_error(dirName + errno));
+    throw(std::runtime_error(PENDRIVE_PATH + errno));
 
   // char buffer[512];
 
