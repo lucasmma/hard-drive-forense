@@ -14,8 +14,8 @@
 #include <algorithm>
 #include <filesystem>
 // #include <Windows.h>
-#include "utils.h"
 #include "fat32.h"
+#include "utils.h"
 
 #define MAX_FILES 65534
 #define SECTOR_PER_CLUSTER 2

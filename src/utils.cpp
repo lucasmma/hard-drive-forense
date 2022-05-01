@@ -42,8 +42,6 @@ std::deque<std::string> Utils::parsePath(char* pathFilename){
     x++;
     j++;
   }
-
-
   char buffer[12];
   snprintf(buffer, 12, "%-8s%-3s", path.stem().string().c_str(), path.extension().string().substr(1,3).c_str());
   char upper[512];
@@ -51,6 +49,32 @@ std::deque<std::string> Utils::parsePath(char* pathFilename){
   pathParsed.emplace_back(upper);
 
   return pathParsed;
+}
+
+FileInfo Utils::parseFileBytes(Fat32* fat, char* cluster, int offSetCluster, bool isFile){
+  static char bufferName[12];
+  char bitFieldAttribute = *((unsigned char*)(&cluster[offSetCluster + 11]));
+  // concatenar com o starting cluster area high
+  int highByteStartCluster = *((unsigned short*)(&cluster[offSetCluster + 20]));
+  int lowByteStartCluster = *((unsigned short*)(&cluster[offSetCluster + 26]));
+  int startingClusterArea = Utils::calculateIntfromHighLow(highByteStartCluster, lowByteStartCluster);
+  int fileSize = *((unsigned int*)(&cluster[offSetCluster + 28]));
+  int startingFileAddress = (startingClusterArea - 2) * fat->bytesPerCluster + fat->offSetRootDirectory;
+  char bufferFilename[12];
+  if(!isFile){
+    memcpy(bufferName, &cluster[offSetCluster], 8);
+    bufferName[8] = 0;
+  } else {
+    memcpy(bufferName, &cluster[offSetCluster], 11);
+    bufferName[11] = 0;
+  }
+  struct FileInfo fileInfo;
+  fileInfo.filename = bufferName;
+  fileInfo.startingClusterArea = startingClusterArea;
+  fileInfo.startingFileAddress = startingFileAddress;
+  fileInfo.fileSize = fileSize;
+  fileInfo.bitFieldAttribute = bitFieldAttribute;
+  return fileInfo;
 }
 
 char* Utils::toUpper(char* text, char* upper){

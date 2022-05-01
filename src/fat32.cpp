@@ -102,56 +102,40 @@ FileInfo Fat32::findArchiveOffset(std::deque<std::string> pathFileName, bool isD
     printf("--------------------------------------\n");
     std::cout << "FindArchiveOffset ClusterOffsetInicial e: " << initialClusterOffSet << std::endl;;
   }
-  char* rootDirectory = readCluster(initialClusterOffSet);
-  printSector(initialClusterOffSet);
-  printSector(initialClusterOffSet + 512);
+  char* cluster = readCluster(initialClusterOffSet);
+  if(DEBUG){
+    printSector(initialClusterOffSet);
+    printSector(initialClusterOffSet + 512);
+  }
   for (int i = 0; i < 512*SECTOR_PER_CLUSTER/32; i++){
-    char bufferName[12];
-    char bitFieldAttribute = *((unsigned char*)(&rootDirectory[i * 32 + 11]));
-    // concatenar com o starting cluster area high
-    int highByteStartCluster = *((unsigned short*)(&rootDirectory[i * 32 + 20]));
-    int lowByteStartCluster = *((unsigned short*)(&rootDirectory[i * 32 + 26]));
-    int startingClusterArea = Utils::calculateIntfromHighLow(highByteStartCluster, lowByteStartCluster);
-    int fileSize = *((unsigned int*)(&rootDirectory[i * 32 + 28]));
-    int startingFileAddress = (startingClusterArea - 2) * bytesPerCluster + offSetRootDirectory;
+    struct FileInfo fileInfo = Utils::parseFileBytes(this, cluster, i*32, pathFileName.size() == 1);
     char bufferFilename[12];
-    if(pathFileName.size() != 1){
-      memcpy(bufferName, &rootDirectory[i*32], 8);
-      bufferName[8] = 0;
-    } else {
-      memcpy(bufferName, &rootDirectory[i*32], 11);
-      bufferName[11] = 0;
-    }
     if(isDeleted && pathFileName.size() == 1){
       strcpy(bufferFilename, pathFileName[0].c_str());
       bufferFilename[0] = 0xE5;
     } else{
       strcpy(bufferFilename, pathFileName[0].c_str());
     }
-    if(strcmp(bufferName, bufferFilename) == 0){
+    if(strcmp(fileInfo.filename, bufferFilename) == 0){
       // ACHOU
       pathFileName.pop_front();
       if(DEBUG){
         printf("Index no cluster: %d\n", i*32 + initialClusterOffSet);
-        printf("%02X %02X\n", rootDirectory[i * 32 + 26], rootDirectory[i * 32 + 27]);
-        printf("Name: %s -> HEX: %02X\n", bufferName, *((unsigned long long*)(&bufferName)));
-        printf("Bit Attribute: %02X\n", bitFieldAttribute);
-        printf("Starting Cluster Area: %d\n", startingClusterArea);
-        printf("Bytes Size: %d\n", fileSize);
-        printf("Starting File Address: %d\n", startingFileAddress);
+        printf("Name: %s -> HEX: %02X\n", fileInfo.filename, *((unsigned long long*)(&fileInfo.filename)));
+        printf("Bit Attribute: %02X\n", fileInfo.bitFieldAttribute);
+        printf("Starting Cluster Area: %d\n", fileInfo.startingClusterArea);
+        printf("Bytes Size: %d\n", fileInfo.fileSize);
+        printf("Starting File Address: %d\n", fileInfo.startingFileAddress);
         printf("--------------------------------------\n");
       }
       if(pathFileName.size() == 0){
         if(DEBUG){
-          printf("retornou -> %d\n", startingFileAddress);
+          printf("Endereco do arquivo -> %d\n", fileInfo.startingFileAddress);
         }
-        struct FileInfo fileInfo;
-        fileInfo.startingClusterArea = startingClusterArea;
         fileInfo.clusterIndex = i*32 + initialClusterOffSet;
-        fileInfo.startingFileAddress = startingFileAddress;
         return fileInfo;
       }
-      return findArchiveOffset(pathFileName, isDeleted, startingFileAddress);
+      return findArchiveOffset(pathFileName, isDeleted, fileInfo.startingFileAddress);
     }
   }
   int numberInFat = getIntFromFatN(getFatNfromOffset(initialClusterOffSet));

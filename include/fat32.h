@@ -8,9 +8,12 @@
 
 
 struct FileInfo {
+    char* filename;
     int startingClusterArea;
     int clusterIndex;
     int startingFileAddress;
+    int fileSize;
+    int bitFieldAttribute;
 };
 
 class Fat32 {
