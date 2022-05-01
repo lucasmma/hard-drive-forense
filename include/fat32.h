@@ -7,7 +7,11 @@
 #define FAT32_H
 
 
-
+struct FileInfo {
+    int startingClusterArea;
+    int clusterIndex;
+    int startingFileAddress;
+};
 
 class Fat32 {
   public:
@@ -24,7 +28,7 @@ class Fat32 {
     void fillInfo();
     void setUpFat();
     void printFatInfos();
-    int findArchiveOffset(std::deque<std::string> pathFileName, bool isDeleted, int clusterOffSet = 0);
+    FileInfo findArchiveOffset(std::deque<std::string> pathFileName, bool isDeleted, int clusterOffSet = 0);
     char* dirName;
     std::fstream hardDrive;
     int bytesPerCluster;

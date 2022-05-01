@@ -58,7 +58,7 @@ void setupPendrive() {
   
 }
 
-void findOffsetOfFile(Fat32* fat, char* path){
+void findOffsetOfFile(Fat32* fat, char* path, bool isDeleted = false){
   try {
     std::deque<std::string> pathParsed = Utils::parsePath(path);
     if(DEBUG){
@@ -66,12 +66,13 @@ void findOffsetOfFile(Fat32* fat, char* path){
         printf("\033[7m%s\033[27m\n", i.c_str());
       }
     }
-    int initialOffSet = fat->findArchiveOffset(pathParsed, false);
-    if (initialOffSet == NOT_FOUND){
+    struct FileInfo initialOffSet = fat->findArchiveOffset(pathParsed, isDeleted);
+    if (initialOffSet.startingFileAddress == NOT_FOUND){
       std::cout << "Arquivo inexistente" << std::endl;
       std::cout << std::endl;
     } else {
-      std::cout << "OffSet Inicial do arquivo " << path << " --> " << initialOffSet << std::endl;
+      std::cout << "Starting Area do cluster do arquivo" << path << " --> " << initialOffSet.startingClusterArea << std::endl;
+      std::cout << "OffSet Inicial do conteudo do arquivo " << path << " --> " << initialOffSet.startingFileAddress << std::endl;
       std::cout << std::endl;
     }
   }  catch(const std::exception& e) {
@@ -99,6 +100,7 @@ int main (int argc, char const **argv) {
       std::cout << "4 - para achar o offset de um arquivo" << std::endl;
       std::cout << "5 - para sair" << std::endl;
       std::cout << std::endl;
+      std::cout << "Escolha uma opcao: ";
       std::cin >> number;
       if(number == 0){
         setupPendrive();
@@ -116,9 +118,10 @@ int main (int argc, char const **argv) {
         fat->undeleteFile(tmp);
       } else if (number == 4){
         char tmp[50];
-        std::cout << "Digite o path do arquivo: ";
-        std::cin >> tmp;
-        findOffsetOfFile(fat, tmp);
+        // std::cout << "Digite o path do arquivo: ";
+        // std::cin >> tmp;
+        // findOffsetOfFile(fat, "pasta1/pasta2/pasta3/ola.txt");
+        findOffsetOfFile(fat, "pasta1/66712.txt");
       } else if (number == 5){
         exit = true;
         std::cout << "Good Bye!" << std::endl; 
