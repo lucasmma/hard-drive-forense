@@ -71,7 +71,7 @@ void findOffsetOfFile(Fat32* fat, char* path, bool isDeleted = false){
       std::cout << "Arquivo inexistente" << std::endl;
       std::cout << std::endl;
     } else {
-      std::cout << "Starting Area do cluster do arquivo" << path << " --> " << initialOffSet.startingClusterArea << std::endl;
+      std::cout << "Starting Area do cluster do arquivo " << path << " --> " << initialOffSet.startingClusterArea << std::endl;
       std::cout << "OffSet Inicial do conteudo do arquivo " << path << " --> " << initialOffSet.startingFileAddress << std::endl;
       std::cout << std::endl;
     }

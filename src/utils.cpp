@@ -8,6 +8,13 @@ bool Utils::contains(std::vector<int> c, int e) {
     return std::find(c.begin(), c.end(), e) != c.end();
 }
 
+int Utils::calculateIntfromHighLow(int high, int low) {
+  std::cout << "high: " << high << std::endl;
+  std::cout << "low: " << low << std::endl;
+  // std::cout << "low: " << low << std::endl;
+    return (high * 65536) + low;
+}
+
 std::deque<std::string> Utils::parsePath(char* pathFilename){
   std::deque<std::string> pathParsed;
   std::filesystem::path path(pathFilename);

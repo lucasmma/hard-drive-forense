@@ -79,6 +79,7 @@ int Fat32::getIntFromFatN(int n){
   return *((unsigned int*)(&fatSector[(((n*4) + offSetFat1) % 512)]));
 }
 
+
 void Fat32::fillInfo(){
   char* firstSector =  readSector(0);
   bytesPerSector = *((unsigned short*)(&firstSector[11]));
@@ -107,10 +108,13 @@ FileInfo Fat32::findArchiveOffset(std::deque<std::string> pathFileName, bool isD
   for (int i = 0; i < 512*SECTOR_PER_CLUSTER/32; i++){
     char bufferName[12];
     char bitFieldAttribute = *((unsigned char*)(&rootDirectory[i * 32 + 11]));
-    int startingClusterArea = *((unsigned short*)(&rootDirectory[i * 32 + 26]));
+    // concatenar com o starting cluster area high
+    int highByteStartCluster = *((unsigned short*)(&rootDirectory[i * 32 + 20]));
+    int lowByteStartCluster = *((unsigned short*)(&rootDirectory[i * 32 + 26]));
+    int startingClusterArea = Utils::calculateIntfromHighLow(highByteStartCluster, lowByteStartCluster);
     int fileSize = *((unsigned int*)(&rootDirectory[i * 32 + 28]));
     int startingFileAddress = (startingClusterArea - 2) * bytesPerCluster + offSetRootDirectory;
-    char bufferFilename[11];
+    char bufferFilename[12];
     if(pathFileName.size() != 1){
       memcpy(bufferName, &rootDirectory[i*32], 8);
       bufferName[8] = 0;
@@ -133,8 +137,6 @@ FileInfo Fat32::findArchiveOffset(std::deque<std::string> pathFileName, bool isD
         printf("Name: %s -> HEX: %02X\n", bufferName, *((unsigned long long*)(&bufferName)));
         printf("Bit Attribute: %02X\n", bitFieldAttribute);
         printf("Starting Cluster Area: %d\n", startingClusterArea);
-        printf("Starting Cluster Short: %d\n", *((unsigned short*)(&rootDirectory[i * 32 + 26])));
-        printf("Starting Cluster Area HEX: %02x\n", startingClusterArea);
         printf("Bytes Size: %d\n", fileSize);
         printf("Starting File Address: %d\n", startingFileAddress);
         printf("--------------------------------------\n");
@@ -173,10 +175,8 @@ void Fat32::undeleteFile(char* filename){
   // para recuperar um arquivo pequeno
   // achar o offset
   FileInfo fileInfo = findArchiveOffset(Utils::parsePath(filename), true);
-
-  char* archiveCluster = readCluster(fileInfo.startingClusterArea);
   // ler o cluster do arquivo
-
+  char* archiveCluster = readCluster(fileInfo.startingClusterArea);
   // trocar a primeira letra do filename
 
   // escrever o cluster do arquivo
