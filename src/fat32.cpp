@@ -161,8 +161,7 @@ void Fat32::undeleteFile(char* filename){
   FileInfo fileInfo = findArchiveOffset(Utils::parsePath(filename), true);
   // ler o cluster do arquivo
   char* archiveCluster = readCluster(fileInfo.startingClusterArea);
-  // trocar a primeira letra do filename
-
+  archiveCluster[fileInfo.clusterIndex] = Utils::parsePath(filename).back()[0];
   // escrever o cluster do arquivo
 
   // escrever na fat se é o fim do arquivo ou não
