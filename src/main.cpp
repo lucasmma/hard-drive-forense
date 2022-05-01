@@ -15,21 +15,18 @@ void deleteRandomFilesInDirectory(std::string baseFileName, int nFilesToDelete, 
   }
 }
 
-void fillDirectoryUntillFull(std::string dirname) {
-    try
-    {
-        int maxFiles = 0;
+void fillDirectory(std::string dirname, int fileSize) {
+    try {
+        int fileNumber = 0;
         while(true) {
-            // Sysfiles::createSizedFile(dirname + "/" + std::to_string(maxFiles) + ".txt", 10000000);
-            maxFiles ++;
-            std::cout << "Creating File: " << dirname << "/" << maxFiles << std::endl;
+          const char* filename = Utils::stringToChar(dirname + std::to_string(fileNumber)+ ".txt" );
+          Sysfiles::createSizedFile(filename, fileSize);
+          fileNumber++;
+          std::cout << "Creating File: " << dirname << fileNumber << ".txt" << std::endl;
         }
-    }
-    catch(const std::exception& e)
-    {
+    } catch(const std::exception& e) {
         std::cerr << e.what() << '\n';
     }
-    std::cout << "Full" << std::endl;
 }
 
 
@@ -61,22 +58,85 @@ void setupPendrive() {
   
 }
 
+void findOffsetOfFile(Fat32* fat, char* path){
+  try {
+    std::deque<std::string> pathParsed = Utils::parsePath(path);
+    if(DEBUG){
+      for(const std::string &i: pathParsed){
+        printf("\033[7m%s\033[27m\n", i.c_str());
+      }
+    }
+    int initialOffSet = fat->findArchiveOffset(pathParsed, false);
+    if (initialOffSet == NOT_FOUND){
+      std::cout << "Arquivo inexistente" << std::endl;
+      std::cout << std::endl;
+    } else {
+      std::cout << "OffSet Inicial do arquivo " << path << " --> " << initialOffSet << std::endl;
+      std::cout << std::endl;
+    }
+  }  catch(const std::exception& e) {
+    std::cout << "Arquivo inexistente" << std::endl;
+    std::cerr << "Motivo: "<< e.what() << '\n\n';
+  }
+  
+}
+
 int main (int argc, char const **argv) {
   char* hardDrivePath = "\\\\.\\E:";
   //  seekg para ler 
   //  seekp para escrever
+
+  bool exit = false;
   try {
     Fat32 *fat = new Fat32(hardDrivePath);
-    std::deque<std::string> teste = Utils::parsePath("pasta/ola.txt");
-    for(const std::string &i: teste){
-      // std::cout << i << std::endl;
-      printf("\033[7m%s\033[27m\n", i.c_str());
+    while(!exit){
+      int number;
+      std::cout << "--------------------------------------------" << std::endl;
+      std::cout << "0 - para dar o setup no pendrive" << std::endl;
+      std::cout << "1 - para encher pendrive" << std::endl;
+      std::cout << "2 - print fat info" << std::endl;
+      std::cout << "3 - para desdeletar um arquivo" << std::endl;
+      std::cout << "4 - para achar o offset de um arquivo" << std::endl;
+      std::cout << "5 - para sair" << std::endl;
+      std::cout << std::endl;
+      std::cin >> number;
+      if(number == 0){
+        setupPendrive();
+        std::cout << "Pendrive cheio" << std::endl;  
+      } else if (number == 1){
+        fillDirectory("\\\\.\\E:\\pasta1\\", 1000000);
+      } else if (number == 2){
+        std::cout << std::endl;
+        fat->printFatInfos();
+        std::cout << std::endl;
+      } else if (number == 3){
+        char tmp[50];
+        std::cout << "Digite o path do arquivo para ser desdeletado: ";
+        std::cin >> tmp;
+        fat->undeleteFile(tmp);
+      } else if (number == 4){
+        char tmp[50];
+        std::cout << "Digite o path do arquivo: ";
+        std::cin >> tmp;
+        findOffsetOfFile(fat, tmp);
+      } else if (number == 5){
+        exit = true;
+        std::cout << "Good Bye!" << std::endl; 
+      } else{
+        std::cout << std::endl << "Digite um número de 0 a 4" << std::endl;
+      }
     }
+    // Fat32 *fat = new Fat32(hardDrivePath);
+    // std::deque<std::string> teste = Utils::parsePath("pasta/ola.txt");
+    // for(const std::string &i: teste){
+    //   // std::cout << i << std::endl;
+    //   printf("\033[7m%s\033[27m\n", i.c_str());
+    // }
     
-    fat->printFatInfos();
-    char* filePath = "pasta/ola.txt";
-    int initialOffSet = fat->findArchiveOffset(Utils::parsePath(filePath), false);
-    std::cout << "OffSet Inicial do arquivo " << filePath << " --> " << initialOffSet << std::endl;
+    // fat->printFatInfos();
+    // char* filePath = "pasta/ola.txt";
+    // int initialOffSet = fat->findArchiveOffset(Utils::parsePath(filePath), false);
+    // std::cout << "OffSet Inicial do arquivo " << filePath << " --> " << initialOffSet << std::endl;
 
     // char* buffer = fat->readSector(0);
     // fat->writeSector(16782336, buffer);
@@ -98,7 +158,8 @@ int main (int argc, char const **argv) {
     // disk.write(buffer, 512);
 
   } catch(const std::exception& e) {
-        std::cerr << e.what() << " " << "erro" << '\n';
+        perror("Invalid disk letter");
+        std::cerr << "Disco nao existe: " << e.what() << '\n';
   }
   return 0;
 }

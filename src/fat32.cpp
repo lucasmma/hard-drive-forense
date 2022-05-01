@@ -77,7 +77,7 @@ int Fat32::getIntFromFatN(int n){
   int offSetSector = (n*4) + offSetFat1 - (((n*4) + offSetFat1) % 512);
   std::cout << offSetSector << std::endl;
   char* fatSector = readSector(offSetSector);
-  return *((unsigned int*)(&fatSector[n*4]));
+  return *((unsigned int*)(&fatSector[(((n*4) + offSetFat1) % 512)]));
 }
 
 void Fat32::fillInfo(){
@@ -129,6 +129,7 @@ int Fat32::findArchiveOffset(std::deque<std::string> pathFileName, bool isDelete
       printf("Cluster offset: %d\n\n", initialClusterOffSet);
       printf("--------------------------------------\n");
       if(pathFileName.size() == 0){
+        printf("retornou\n");
         return startingFileAddress;
       }
       return findArchiveOffset(pathFileName, isDeleted, startingFileAddress);
@@ -143,6 +144,10 @@ int Fat32::findArchiveOffset(std::deque<std::string> pathFileName, bool isDelete
     int nextCluserOffset = (numberInFat - 2) * bytesPerCluster + offSetRootDirectory;
     return findArchiveOffset(pathFileName, isDeleted, nextCluserOffset);
   }
+}
+
+void Fat32::undeleteFile(char* filename){
+
 }
 
 void Fat32::readDisk(){

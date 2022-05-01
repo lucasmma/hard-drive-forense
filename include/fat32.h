@@ -15,6 +15,7 @@ class Fat32 {
     ~Fat32();
     void readDisk();
     void printSector(int offSet);
+    void undeleteFile(char* filename);
     char* readSector(int offSet);
     char* readCluster(int offSet);
     int getFatNfromOffset(int offSet);
