@@ -1,17 +1,17 @@
 #include "../include/sysfiles.h"
 
 void deleteRandomFilesInDirectory(std::string baseFileName, int nFilesToDelete, int lastIndex) {
-  int deletedFiles = 0;
+  int deletedFilesCount = 0;
   std::vector<int> deletedNumbers;
 
-  while (deletedFiles != nFilesToDelete){
+  while (deletedFilesCount != nFilesToDelete){
     int randomIndex = (rand() % (int)(lastIndex/2)) * 2;
     while(Utils::contains(deletedNumbers, randomIndex)){
       randomIndex = (rand() % (int)(lastIndex/2)) * 2;
     }
-    Sysfiles::deleteFile((baseFileName + std::to_string(randomIndex)).c_str());
+    Sysfiles::deleteFile((baseFileName + std::to_string(randomIndex) + ".txt").c_str());
     deletedNumbers.push_back(randomIndex);
-    deletedFiles++;
+    deletedFilesCount++;
   }
 }
 
@@ -38,6 +38,7 @@ void setupPendrive() {
   Sysfiles::createXFilesInDir("E:\\", maxFiles, 512);
   Sysfiles::createXFilesInDir("E:\\SD1\\SD1.0\\", maxFiles, 4000);
   Sysfiles::createXFilesInDir("E:\\SD1\\SD1.1\\", maxFiles, 8000);
+  Sysfiles::fillDirectory("E:\\SD1\\SD1.2\\");
   Sysfiles::fillDirectory("E:\\SD1\\SD1.2\\");
 }
 
@@ -78,10 +79,11 @@ int main (int argc, char const **argv) {
       std::cout << "--------------------------------------------" << std::endl;
       std::cout << "0 - para dar o setup no pendrive" << std::endl;
       std::cout << "1 - para encher pendrive" << std::endl;
-      std::cout << "2 - print fat info" << std::endl;
-      std::cout << "3 - para desdeletar um arquivo" << std::endl;
-      std::cout << "4 - para achar o offset de um arquivo" << std::endl;
-      std::cout << "5 - para sair" << std::endl;
+      std::cout << "2 - para deletar os arquivos" << std::endl;
+      std::cout << "3 - print fat info" << std::endl;
+      std::cout << "4 - para desdeletar um arquivo" << std::endl;
+      std::cout << "5 - para achar o offset de um arquivo" << std::endl;
+      std::cout << "6 - para sair" << std::endl;
       std::cout << std::endl;
       std::cout << "Escolha uma opcao: ";
       std::cin >> number;
@@ -91,21 +93,25 @@ int main (int argc, char const **argv) {
       } else if (number == 1){
         Sysfiles::fillDirectory("E:\\SD1\\SD1.2\\");
       } else if (number == 2){
+        deleteRandomFilesInDirectory("E:\\SD0\\", 50, 370); //arquivos de 512
+        deleteRandomFilesInDirectory("E:\\SD1\\SD1.0\\", 50, 100); //arquivos de 4KB
+        deleteRandomFilesInDirectory("E:\\SD1\\SD1.1\\", 50, 100); //arquivos de 8KB
+      } else if (number == 3){
         std::cout << std::endl;
         fat->printFatInfos();
         std::cout << std::endl;
-      } else if (number == 3){
+      } else if (number == 4){
         char tmp[50];
         std::cout << "Digite o path do arquivo para ser desdeletado: ";
         std::cin >> tmp;
         fat->undeleteFile(tmp);
-      } else if (number == 4){
+      } else if (number == 5){
         char tmp[50];
         std::cout << "Digite o path do arquivo: ";
         std::cin >> tmp;
         // findOffsetOfFile(fat, "pasta1/pasta2/pasta3/ola.txt");
         findOffsetOfFile(fat, tmp);
-      } else if (number == 5){
+      } else if (number == 6){
         exit = true;
         std::cout << "Good Bye!" << std::endl; 
       } else{

@@ -59,6 +59,6 @@ void Sysfiles::fillDirectory(const char* directoryName){
 
 void Sysfiles::createXFilesInDir(const char* dirName, int maxFiles, int fileSize){
   for (int i = 0; i < maxFiles; i++){
-    createSizedFile((std::string(dirName) + std::to_string(i)).c_str(), fileSize);
+    createSizedFile((std::string(dirName) + std::to_string(i) + ".txt").c_str(), fileSize);
   }
 }
