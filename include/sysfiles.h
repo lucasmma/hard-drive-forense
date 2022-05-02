@@ -35,6 +35,7 @@ class Sysfiles {
     static void createSizedFile(const char* fileName, int sizeBytes);
     static int countFilesInDir(std::string directoryName);
     static void fillDirectory(const char* fileName);
+    static void createXFilesInDir(const char* dirName, int maxFiles, int fileSize);
     static void deleteFile(const char* directoryName);
 };
 

@@ -9,53 +9,36 @@ void deleteRandomFilesInDirectory(std::string baseFileName, int nFilesToDelete, 
     while(Utils::contains(deletedNumbers, randomIndex)){
       randomIndex = (rand() % (int)(lastIndex/2)) * 2;
     }
-    Sysfiles::deleteFile(Utils::stringToChar(baseFileName + std::to_string(randomIndex)));
+    Sysfiles::deleteFile((baseFileName + std::to_string(randomIndex)).c_str());
     deletedNumbers.push_back(randomIndex);
     deletedFiles++;
   }
 }
 
-void fillDirectory(std::string dirname, int fileSize) {
-    try {
-        int fileNumber = 0;
-        while(true) {
-          const char* filename = Utils::stringToChar(dirname + std::to_string(fileNumber)+ ".txt" );
-          Sysfiles::createSizedFile(filename, fileSize);
-          fileNumber++;
-          std::cout << "Creating File: " << dirname << fileNumber << ".txt" << std::endl;
-        }
-    } catch(const std::exception& e) {
-        std::cerr << e.what() << '\n';
-    }
-}
-
-
 void setupPendrive() {
-  std::string baseDirectoryName = "SD";
+  std::string baseDirectoryName = "E:\\SD";
   //create 5 subdirectories with files
   for (int i = 0; i < 5; i++) {
     std::string dirName = baseDirectoryName + std::to_string(i);
-    const char* dirNameChar = Utils::stringToChar(dirName);
-    Sysfiles::createDirectory(dirNameChar);
-    Sysfiles::changeDirectory(dirNameChar);
+    Sysfiles::createDirectory(dirName.c_str());
     for (int j = 0; j < 371; j++) {
-      Sysfiles::createSizedFile(Utils::stringToChar(std::to_string(j)), 1000);
+      std::cout << "Diretorio -> " << dirName << std::endl;
+      std::string fileName = dirName + "\\" +  std::to_string(j) + ".txt";
+      if(DEBUG){
+        std::cout << "Criou o arquivo -> " << fileName << std::endl;
+      }
+      Sysfiles::createSizedFile(fileName.c_str(), 1000);
     }
-    Sysfiles::changeDirectory("..");
   }
-  
   //create 3 subdirectories in SD1
-  Sysfiles::changeDirectory("SD1");
-  for (int i = 0; i < 3; i++){
-    std::string dirNameBase = "SD1.";
-    const char* dirNameChar = Utils::stringToChar(dirNameBase + std::to_string(i));
-    Sysfiles::createDirectory(dirNameChar);
-  }
-  Sysfiles::changeDirectory("..");
-
-
-  
-  
+  Sysfiles::createDirectory("E:\\SD1\\SD1.0");
+  Sysfiles::createDirectory("E:\\SD1\\SD1.1");
+  Sysfiles::createDirectory("E:\\SD1\\SD1.2");
+  int maxFiles = 100;
+  Sysfiles::createXFilesInDir("E:\\", maxFiles, 512);
+  Sysfiles::createXFilesInDir("E:\\SD1\\SD1.0\\", maxFiles, 4000);
+  Sysfiles::createXFilesInDir("E:\\SD1\\SD1.1\\", maxFiles, 8000);
+  Sysfiles::fillDirectory("E:\\SD1\\SD1.2\\");
 }
 
 void findOffsetOfFile(Fat32* fat, char* path, bool isDeleted = false){
@@ -106,7 +89,7 @@ int main (int argc, char const **argv) {
         setupPendrive();
         std::cout << "Pendrive cheio" << std::endl;  
       } else if (number == 1){
-        fillDirectory(std::string(PENDRIVE_PATH) + "\\pasta1\\", 1000000);
+        Sysfiles::fillDirectory("E:\\SD1\\SD1.2\\");
       } else if (number == 2){
         std::cout << std::endl;
         fat->printFatInfos();

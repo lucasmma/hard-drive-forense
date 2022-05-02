@@ -11,7 +11,6 @@
 
 class Utils {
   public:
-    static const char* stringToChar(std::string phrase);
     static bool contains(std::vector<int> c, int e);
     static char* toUpper(char* text, char* upper);
     static int calculateIntfromHighLow(int high, int low);

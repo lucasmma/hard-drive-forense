@@ -1,9 +1,5 @@
 #include "../include/utils.h"
 
-const char* Utils::stringToChar(std::string phrase){
-  return phrase.c_str();
-}
-
 bool Utils::contains(std::vector<int> c, int e) { 
     return std::find(c.begin(), c.end(), e) != c.end();
 }

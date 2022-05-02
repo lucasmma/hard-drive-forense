@@ -44,15 +44,21 @@ void Sysfiles::fillDirectory(const char* directoryName){
     printf ("Free space on drive  = %I64u MB\n", freeBytes / (1024*1024));
   }
   int countFiles = countFilesInDir(directoryName);
-  int fileSize = 1024000;
+  int fileSize = 1048576; // 2**20 -> ~1MB;
   int fileSizeFilled = 0;
-  while(fileSize > 1024) {
-    while(fileSizeFilled + fileSize < freeBytes) {
+  while(fileSize > 512) {
+    while(fileSizeFilled + fileSize <= freeBytes) {
         createSizedFile((std::string(directoryName) + "\\" + std::to_string(countFiles) + ".txt").c_str(), fileSize);
         fileSizeFilled += fileSize;
         countFiles++;
         std::cout << "Current Size Of File: " << fileSize << "B " << fileSizeFilled << "/" << freeBytes << " B" << std::endl;
     }
     fileSize/=2;
+  }
+}
+
+void Sysfiles::createXFilesInDir(const char* dirName, int maxFiles, int fileSize){
+  for (int i = 0; i < maxFiles; i++){
+    createSizedFile((std::string(dirName) + std::to_string(i)).c_str(), fileSize);
   }
 }
