@@ -245,41 +245,34 @@ void Fat32::undeleteFile(char* filename){
   archiveCluster[fileInfo.clusterIndex] = Utils::parsePath(filename).back()[0];
   // int fileSize = 1000;
   // memcpy(&archiveCluster[fileInfo.clusterIndex + 28], (unsigned char*)&fileSize, 4);
-  std::cout << "Initial cluster off set" << fileInfo.initialClusterOffSet << std::endl; 
-  std::cout << "Cluster Index " << fileInfo.clusterIndex << std::endl; 
-  std::cout << "Size do arquivo " << fileInfo.fileSize << std::endl; 
-  printCluster(archiveCluster);
+  if(DEBUG){
+    std::cout << "Initial cluster off set" << fileInfo.initialClusterOffSet << std::endl; 
+    std::cout << "Cluster Index " << fileInfo.clusterIndex << std::endl; 
+    std::cout << "Size do arquivo " << fileInfo.fileSize << std::endl; 
+    printCluster(archiveCluster);
+  }
   // escrever o cluster do arquivo
   writeCluster(fileInfo.initialClusterOffSet, archiveCluster);
   int nOffset = fileInfo.startingClusterArea;
   int fat1SectorOffset = (nOffset*4) + offSetFat1 - (((nOffset*4) + offSetFat1) % 512);
   int fat2SectorOffset = (nOffset*4) + offSetFat2 - (((nOffset*4) + offSetFat2) % 512);
   char* fatSector = readSector(fat1SectorOffset);
-  std::cout << "Numero do offset " << nOffset << std::endl;
-  std::cout << "Numero do offset do fat 1 " << fat1SectorOffset << std::endl;
-  std::cout << "Numero do offset do fat 2 " << fat2SectorOffset << std::endl;
-  std::cout << "Numero do index do fat " << ((nOffset*4) + offSetFat1) % 512 << std::endl;
+  if(DEBUG){
+    std::cout << "Numero do offset " << nOffset << std::endl;
+    std::cout << "Numero do offset do fat 1 " << fat1SectorOffset << std::endl;
+    std::cout << "Numero do offset do fat 2 " << fat2SectorOffset << std::endl;
+    std::cout << "Numero do index do fat " << ((nOffset*4) + offSetFat1) % 512 << std::endl;
+    printSector(fatSector);
+  }
   // escrever na fat se é o fim do arquivo ou não
   // Criar uma função que escreve na fat
   // printCluster(fatSector);
   // fatSector[((nOffset*4) + offSetFat1) % 512] = *(unsigned char*)END_OF_FILE;
-  printSector(fatSector);
   memcpy(&fatSector[((nOffset*4) + offSetFat1) % 512], (unsigned char*)&END_OF_FILE, 4);
-  printSector(fatSector);
+  if(DEBUG){
+    printSector(fatSector);
+  }
   writeSector(fat1SectorOffset, fatSector);
   writeSector(fat2SectorOffset, fatSector);
 
 }
-
-// void Fat32::readDisk(){
-//   std::fstream disk;
-//   hardDrive.open(PENDRIVE_PATH, std::fstream::in | std::fstream::out | std::fstream::binary);
-
-//   if(!hardDrive)
-//     throw(std::runtime_error(PENDRIVE_PATH + errno));
-
-//   // char buffer[512];
-
-//   // disk.read(&buffer[0], 512);
-//   // printf("%02x %02x %d \n", (unsigned char)buffer[510], (unsigned char)buffer[511], *((unsigned short*)(&buffer[11])));
-// }
