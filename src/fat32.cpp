@@ -2,7 +2,6 @@
 
 Fat32::Fat32(WCHAR* directoryName){
   dirName = PENDRIVE_PATH;
-  std::cout << dirName << std::endl;
   setUpFat(directoryName);
 }
 
@@ -98,11 +97,11 @@ void Fat32::printCluster(char* bufferCluster){
 
 void Fat32::writeSector(int offSet, char* bufferSector){
   DWORD returned;
-  if (!DeviceIoControl(_device, FSCTL_DISMOUNT_VOLUME,
-      NULL, 0, NULL, 0, &returned, NULL)){
-      DWORD err = GetLastError();
-      printf("Error %d attempting to dismount volume, error code\n",err);
-  }
+  // if (!DeviceIoControl(_device, FSCTL_DISMOUNT_VOLUME,
+  //     NULL, 0, NULL, 0, &returned, NULL)){
+  //     DWORD err = GetLastError();
+  //     printf("Error %d attempting to dismount volume, error code\n",err);
+  // }
   if(!DeviceIoControl(_device, FSCTL_LOCK_VOLUME, NULL, 0, NULL, 0, &returned, NULL)){
     DWORD err = GetLastError();
     printf("Error %d attempting to lock volume, error code\n",err);
@@ -229,7 +228,8 @@ void Fat32::undeleteFile(char* filename){
   printCluster(archiveCluster);
   // escrever o cluster do arquivo
   writeCluster(fileInfo.initialClusterOffSet, archiveCluster);
-  // // escrever na fat se é o fim do arquivo ou não
+  // escrever na fat se é o fim do arquivo ou não
+  // Criar uma função que escreve na fat
   int nOffset = getFatNfromOffset(fileInfo.initialClusterOffSet);
   int fat1ClusterOffset = (nOffset*4) + offSetFat1 - (((nOffset*4) + offSetFat1) % 512);
   int fat2ClusterOffset = (nOffset*4) + offSetFat2 - (((nOffset*4) + offSetFat2) % 512);

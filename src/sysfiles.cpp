@@ -21,6 +21,16 @@ void Sysfiles::createSizedFile(const char* fileName, int sizeBytes){
     fclose(fp);
 }
 
+void Sysfiles::createSizedFileWithContent(const char* fileName, int sizeBytes, char caractere){
+    FILE *fp = fopen(fileName, "w");
+    for(int i = 0; i < sizeBytes-1; i++){
+      fputc(caractere, fp);
+      fseek(fp, i+1, SEEK_SET);
+    }
+    fputc('\0', fp);
+    fclose(fp);
+}
+
 void Sysfiles::deleteFile(const char* directoryName){
   std::filesystem::remove_all(directoryName);
 }
@@ -51,7 +61,7 @@ void Sysfiles::fillDirectory(const char* directoryName){
         createSizedFile((std::string(directoryName) + "\\" + std::to_string(countFiles) + ".txt").c_str(), fileSize);
         fileSizeFilled += fileSize;
         countFiles++;
-        std::cout << "Current Size Of File: " << fileSize << "B " << fileSizeFilled << "/" << freeBytes << " B" << std::endl;
+        std::cout << "File Size: " << fileSize << "Bytes -> " << (fileSizeFilled/freeBytes) << " %" << std::endl;
     }
     fileSize/=2;
   }

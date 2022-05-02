@@ -32,14 +32,37 @@ void setupPendrive() {
   }
   //create 3 subdirectories in SD1
   Sysfiles::createDirectory("E:\\SD1\\SD1.0");
+  std::cout << "Criou o diretorio E:\\SD1\\SD1.0" << std::endl;
   Sysfiles::createDirectory("E:\\SD1\\SD1.1");
+  std::cout << "Criou o diretorio E:\\SD1\\SD1.1" << std::endl;
   Sysfiles::createDirectory("E:\\SD1\\SD1.2");
+  std::cout << "Criou o diretorio E:\\SD1\\SD1.2" << std::endl;
   int maxFiles = 100;
   Sysfiles::createXFilesInDir("E:\\", maxFiles, 512);
+  std::cout << "Criou " << maxFiles << " arquivos no diretorio E:\\ com arquivos de 512 bytes" << std::endl << std::endl;
   Sysfiles::createXFilesInDir("E:\\SD1\\SD1.0\\", maxFiles, 4000);
+  std::cout << "Criou " << maxFiles << " arquivos no diretorio E:\\SD1\\SD1.1\\ com arquivos de 8 Kb" << std::endl << std::endl;
   Sysfiles::createXFilesInDir("E:\\SD1\\SD1.1\\", maxFiles, 8000);
+  std::cout << "Criou " << maxFiles << " arquivos no diretorio E:\\SD1\\SD1.1\\ com arquivos de 8 Kb" << std::endl << std::endl;
   Sysfiles::fillDirectory("E:\\SD1\\SD1.2\\");
   Sysfiles::fillDirectory("E:\\SD1\\SD1.2\\");
+  std::cout << std::endl << "Encheu a pasta E:\\SD1\\SD1.2\\" << std::endl << std::endl;
+  std::cout << std::endl << "Pendrive cheio" << std::endl << std::endl;
+  deleteRandomFilesInDirectory("E:\\SD0\\", 50, 370); //arquivos de 512
+  std::cout << "Deletou 50 arquivos da pasta E:\\SD0\\" << std::endl;
+  deleteRandomFilesInDirectory("E:\\SD1\\SD1.0\\", 50, 100); //arquivos de 4KB
+  std::cout << "Deletou 50 arquivos da pasta E:\\SD1\\SD1.0\\" << std::endl;
+  deleteRandomFilesInDirectory("E:\\SD1\\SD1.1\\", 50, 100); //arquivos de 8KB
+  std::cout << "Deletou 50 arquivos da pasta E:\\SD1\\SD1.1\\" << std::endl;
+  for (int i = 0; i < 10; i++){
+    // criar 10 arquivos com 40000
+    if(i == 4){
+      Sysfiles::createSizedFileWithContent((std::string("E:\\") + std::to_string(i + 100) + ".txt").c_str(), 40000, 'i');
+    } else {
+      Sysfiles::createSizedFile((std::string("E:\\") + std::to_string(i + 100) + ".txt").c_str(), 40000);
+    }
+  }
+  std::cout << "Criou os 10 arquivos finais" << std::endl;
 }
 
 void findOffsetOfFile(Fat32* fat, char* path, bool isDeleted = false){
@@ -79,7 +102,7 @@ int main (int argc, char const **argv) {
       std::cout << "--------------------------------------------" << std::endl;
       std::cout << "0 - para dar o setup no pendrive" << std::endl;
       std::cout << "1 - para encher pendrive" << std::endl;
-      std::cout << "2 - para deletar os arquivos" << std::endl;
+      std::cout << "2 - para deletar os arquivos randomico" << std::endl;
       std::cout << "3 - print fat info" << std::endl;
       std::cout << "4 - para desdeletar um arquivo" << std::endl;
       std::cout << "5 - para achar o offset de um arquivo" << std::endl;
@@ -89,7 +112,6 @@ int main (int argc, char const **argv) {
       std::cin >> number;
       if(number == 0){
         setupPendrive();
-        std::cout << "Pendrive cheio" << std::endl;  
       } else if (number == 1){
         Sysfiles::fillDirectory("E:\\SD1\\SD1.2\\");
       } else if (number == 2){
