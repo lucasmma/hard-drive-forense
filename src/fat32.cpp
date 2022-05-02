@@ -111,11 +111,7 @@ void Fat32::printCluster(char* bufferCluster){
 void Fat32::writeSector(int offSet, char* bufferSector){
   DWORD returned;
   if(DeviceIoControl(_device, FSCTL_IS_VOLUME_MOUNTED, NULL, 0, NULL, 0, &returned, NULL)){
-    // if (!DeviceIoControl(_device, FSCTL_DISMOUNT_VOLUME,
-    //     NULL, 0, NULL, 0, &returned, NULL)){
-    //     DWORD err = GetLastError();
-    //     printf("Error %d attempting to dismount volume, error code\n",err);
-    // }
+    dismountVolume();
     
     if(!DeviceIoControl(_device, FSCTL_LOCK_VOLUME, NULL, 0, NULL, 0, &returned, NULL)){
       DWORD err = GetLastError();
@@ -129,12 +125,14 @@ void Fat32::writeSector(int offSet, char* bufferSector){
   SetFilePointer(_device, offSet, NULL, FILE_BEGIN);
   WriteFile(_device, bufferSector, 512, &returned, NULL);
 
-  if(!DeviceIoControl(_device, FSCTL_UNLOCK_VOLUME, NULL, 0, NULL, 0, &returned, NULL)){
-    DWORD err = GetLastError();
-    printf("Error %d attempting to unlock volume, error code\n",err);
-  }
-  if(DEBUG) {
-    std::cout << "Volume Unocked " << std::endl;
+  if(!DeviceIoControl(_device, FSCTL_IS_VOLUME_MOUNTED, NULL, 0, NULL, 0, &returned, NULL)){
+    if(!DeviceIoControl(_device, FSCTL_UNLOCK_VOLUME, NULL, 0, NULL, 0, &returned, NULL)){
+      DWORD err = GetLastError();
+      printf("Error %d attempting to unlock volume, error code\n",err);
+    }
+    if(DEBUG) {
+      std::cout << "Volume Unocked " << std::endl;
+    }
   }
 }
 
