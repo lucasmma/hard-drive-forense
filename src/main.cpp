@@ -113,7 +113,11 @@ int main (int argc, char const **argv) {
       if(number == 0){
         setupPendrive();
       } else if (number == 1){
-        Sysfiles::fillDirectory("E:\\SD1\\SD1.2\\");
+        char tmp[50];
+        std::cout << "Digite o path do diretorio para ser enchido: ";
+        std::cin >> tmp;
+        Sysfiles::fillDirectory(tmp);
+        Sysfiles::fillDirectory(tmp);
       } else if (number == 2){
         deleteRandomFilesInDirectory("E:\\SD0\\", 50, 370); //arquivos de 512
         deleteRandomFilesInDirectory("E:\\SD1\\SD1.0\\", 50, 100); //arquivos de 4KB

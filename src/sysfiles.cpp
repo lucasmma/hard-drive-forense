@@ -61,7 +61,7 @@ void Sysfiles::fillDirectory(const char* directoryName){
         createSizedFile((std::string(directoryName) + "\\" + std::to_string(countFiles) + ".txt").c_str(), fileSize);
         fileSizeFilled += fileSize;
         countFiles++;
-        std::cout << "File Size: " << fileSize << "Bytes -> " << (fileSizeFilled/freeBytes) << " %" << std::endl;
+        std::cout << "File Size: " << fileSize << "Bytes -> " << ((double)fileSizeFilled/(double)freeBytes) << " %" << std::endl;
     }
     fileSize/=2;
   }

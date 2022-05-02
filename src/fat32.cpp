@@ -125,7 +125,7 @@ void Fat32::writeSector(int offSet, char* bufferSector){
   SetFilePointer(_device, offSet, NULL, FILE_BEGIN);
   WriteFile(_device, bufferSector, 512, &returned, NULL);
 
-  if(!DeviceIoControl(_device, FSCTL_IS_VOLUME_MOUNTED, NULL, 0, NULL, 0, &returned, NULL)){
+  if(DeviceIoControl(_device, FSCTL_IS_VOLUME_MOUNTED, NULL, 0, NULL, 0, &returned, NULL)){
     if(!DeviceIoControl(_device, FSCTL_UNLOCK_VOLUME, NULL, 0, NULL, 0, &returned, NULL)){
       DWORD err = GetLastError();
       printf("Error %d attempting to unlock volume, error code\n",err);
