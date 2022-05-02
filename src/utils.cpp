@@ -55,8 +55,7 @@ FileInfo Utils::parseFileBytes(Fat32* fat, char* cluster, int offSetCluster, boo
   int lowByteStartCluster = *((unsigned short*)(&cluster[offSetCluster + 26]));
   int startingClusterArea = Utils::calculateIntfromHighLow(highByteStartCluster, lowByteStartCluster);
   int fileSize = *((unsigned int*)(&cluster[offSetCluster + 28]));
-  int startingFileAddress = (startingClusterArea - 2) * fat->bytesPerCluster + fat->offSetRootDirectory;
-  char bufferFilename[12];
+  int startingFileAddress = ((startingClusterArea - 2) * fat->bytesPerCluster) + fat->offSetRootDirectory;
   if(!isFile){
     memcpy(bufferName, &cluster[offSetCluster], 8);
     bufferName[8] = 0;

@@ -96,7 +96,7 @@ int main (int argc, char const **argv) {
 
   bool exit = false;
   try {
-    Fat32 *fat = new Fat32(hardDrivePath);
+    Fat32 fat = Fat32(hardDrivePath);
     while(!exit){
       int number;
       std::cout << "--------------------------------------------" << std::endl;
@@ -120,19 +120,19 @@ int main (int argc, char const **argv) {
         deleteRandomFilesInDirectory("E:\\SD1\\SD1.1\\", 50, 100); //arquivos de 8KB
       } else if (number == 3){
         std::cout << std::endl;
-        fat->printFatInfos();
+        fat.printFatInfos();
         std::cout << std::endl;
       } else if (number == 4){
         char tmp[50];
         std::cout << "Digite o path do arquivo para ser desdeletado: ";
         std::cin >> tmp;
-        fat->undeleteFile(tmp);
+        fat.undeleteFile(tmp);
       } else if (number == 5){
         char tmp[50];
         std::cout << "Digite o path do arquivo: ";
         std::cin >> tmp;
         // findOffsetOfFile(fat, "pasta1/pasta2/pasta3/ola.txt");
-        findOffsetOfFile(fat, tmp);
+        findOffsetOfFile(&fat, tmp);
       } else if (number == 6){
         exit = true;
         std::cout << "Good Bye!" << std::endl; 
@@ -147,13 +147,13 @@ int main (int argc, char const **argv) {
     //   printf("\033[7m%s\033[27m\n", i.c_str());
     // }
     
-    // fat->printFatInfos();
+    // fat.printFatInfos();
     // char* filePath = "pasta/ola.txt";
-    // int initialOffSet = fat->findArchiveOffset(Utils::parsePath(filePath), false);
+    // int initialOffSet = fat.findArchiveOffset(Utils::parsePath(filePath), false);
     // std::cout << "OffSet Inicial do arquivo " << filePath << " --> " << initialOffSet << std::endl;
 
-    // char* buffer = fat->readSector(0);
-    // fat->writeSector(16782336, buffer);
+    // char* buffer = fat.readSector(0);
+    // fat.writeSector(16782336, buffer);
     // std::cout << 16782336 << std::endl;
 
     // *((unsigned short*)(&buffer[11]))

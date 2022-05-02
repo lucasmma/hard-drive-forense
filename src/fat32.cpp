@@ -8,16 +8,15 @@ Fat32::Fat32(WCHAR* directoryName){
 
 
 void Fat32::setUpFat(WCHAR* directoryName){
-  readDisk();
-  fillInfo();
   _device = CreateFileW(directoryName, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
   if(_device == INVALID_HANDLE_VALUE) {
     std::cout << "Handle nao criado" << std::endl;
   }
+  fillInfo();
 }
 
 Fat32::~Fat32(){
-
+  CloseHandle(_device);
 }
 
 void Fat32::printFatInfos(){
@@ -75,10 +74,24 @@ void Fat32::printSector(char* buffer){
   std::cout << "-------------------------------------------------------------------";
   std::cout << std::endl << std::endl;
 }
+void Fat32::dismountVolume(){
+  DWORD returned;
+  if (!DeviceIoControl(_device, FSCTL_DISMOUNT_VOLUME, NULL, 0, NULL, 0, &returned, NULL)){
+      DWORD err = GetLastError();
+      printf("Error %d attempting to dismount volume, error code\n",err);
+  }
+}
 
 char* Fat32::readSector(int offSet){
-  hardDrive.seekg(offSet, std::ios_base::beg);
-  hardDrive.read(&_currentBuffer[0], 512);
+  DWORD returned;
+  SetFilePointer(_device, offSet, NULL, FILE_BEGIN);
+  if(!ReadFile(_device, &_currentBuffer[0], 512, &returned, NULL)){
+    DWORD err = GetLastError();
+    printf("Error %d attempting to read volume on index %d, error code\n",err, offSet);
+    // getchar();
+  }
+  // hardDrive.seekg(offSet, std::ios_base::beg);
+  // hardDrive.read(&_currentBuffer[0], 512);
   return _currentBuffer;
 }
 
@@ -97,14 +110,20 @@ void Fat32::printCluster(char* bufferCluster){
 
 void Fat32::writeSector(int offSet, char* bufferSector){
   DWORD returned;
-  // if (!DeviceIoControl(_device, FSCTL_DISMOUNT_VOLUME,
-  //     NULL, 0, NULL, 0, &returned, NULL)){
-  //     DWORD err = GetLastError();
-  //     printf("Error %d attempting to dismount volume, error code\n",err);
-  // }
-  if(!DeviceIoControl(_device, FSCTL_LOCK_VOLUME, NULL, 0, NULL, 0, &returned, NULL)){
-    DWORD err = GetLastError();
-    printf("Error %d attempting to lock volume, error code\n",err);
+  if(DeviceIoControl(_device, FSCTL_IS_VOLUME_MOUNTED, NULL, 0, NULL, 0, &returned, NULL)){
+    // if (!DeviceIoControl(_device, FSCTL_DISMOUNT_VOLUME,
+    //     NULL, 0, NULL, 0, &returned, NULL)){
+    //     DWORD err = GetLastError();
+    //     printf("Error %d attempting to dismount volume, error code\n",err);
+    // }
+    
+    if(!DeviceIoControl(_device, FSCTL_LOCK_VOLUME, NULL, 0, NULL, 0, &returned, NULL)){
+      DWORD err = GetLastError();
+      printf("Error %d attempting to lock volume, error code\n",err);
+    }
+    if(DEBUG) {
+      std::cout << "Volume Locked " << std::endl;
+    }
   }
 
   SetFilePointer(_device, offSet, NULL, FILE_BEGIN);
@@ -113,6 +132,9 @@ void Fat32::writeSector(int offSet, char* bufferSector){
   if(!DeviceIoControl(_device, FSCTL_UNLOCK_VOLUME, NULL, 0, NULL, 0, &returned, NULL)){
     DWORD err = GetLastError();
     printf("Error %d attempting to unlock volume, error code\n",err);
+  }
+  if(DEBUG) {
+    std::cout << "Volume Unocked " << std::endl;
   }
 }
 
@@ -127,7 +149,7 @@ int Fat32::getFatNfromOffset(int offSet){
 }
 
 int Fat32::getIntFromFatN(int n){
-  int offSetSector = (n*4) + offSetFat1 - (((n*4) + offSetFat1) % 512);
+  int offSetSector = offSetFat1 + n / 128 * 512;
   // std::cout << offSetSector << std::endl;
   char* fatSector = readSector(offSetSector);
   return *((unsigned int*)(&fatSector[(((n*4) + offSetFat1) % 512)]));
@@ -170,7 +192,7 @@ FileInfo Fat32::findArchiveOffset(std::deque<std::string> pathFileName, bool isD
     } else{
       strcpy(bufferFilename, pathFileName[0].c_str());
     }
-    if(strcmp(fileInfo.filename, bufferFilename) == 0){
+    if(strcmp(fileInfo.filename, bufferFilename) == 0 && fileInfo.fileSize > 0 && fileInfo.startingClusterArea > 2){
       // ACHOU
       pathFileName.pop_front();
       if(DEBUG){
@@ -223,41 +245,43 @@ void Fat32::undeleteFile(char* filename){
   // ler o cluster do arquivo
   char* archiveCluster = readCluster(fileInfo.initialClusterOffSet);
   archiveCluster[fileInfo.clusterIndex] = Utils::parsePath(filename).back()[0];
+  // int fileSize = 1000;
+  // memcpy(&archiveCluster[fileInfo.clusterIndex + 28], (unsigned char*)&fileSize, 4);
   std::cout << "Initial cluster off set" << fileInfo.initialClusterOffSet << std::endl; 
   std::cout << "Cluster Index " << fileInfo.clusterIndex << std::endl; 
+  std::cout << "Size do arquivo " << fileInfo.fileSize << std::endl; 
   printCluster(archiveCluster);
   // escrever o cluster do arquivo
   writeCluster(fileInfo.initialClusterOffSet, archiveCluster);
+  int nOffset = fileInfo.startingClusterArea;
+  int fat1SectorOffset = (nOffset*4) + offSetFat1 - (((nOffset*4) + offSetFat1) % 512);
+  int fat2SectorOffset = (nOffset*4) + offSetFat2 - (((nOffset*4) + offSetFat2) % 512);
+  char* fatSector = readSector(fat1SectorOffset);
+  std::cout << "Numero do offset " << nOffset << std::endl;
+  std::cout << "Numero do offset do fat 1 " << fat1SectorOffset << std::endl;
+  std::cout << "Numero do offset do fat 2 " << fat2SectorOffset << std::endl;
+  std::cout << "Numero do index do fat " << ((nOffset*4) + offSetFat1) % 512 << std::endl;
   // escrever na fat se é o fim do arquivo ou não
   // Criar uma função que escreve na fat
-  int nOffset = getFatNfromOffset(fileInfo.initialClusterOffSet);
-  int fat1ClusterOffset = (nOffset*4) + offSetFat1 - (((nOffset*4) + offSetFat1) % 512);
-  int fat2ClusterOffset = (nOffset*4) + offSetFat2 - (((nOffset*4) + offSetFat2) % 512);
-  char* fatCluster = readCluster(fat1ClusterOffset);
-  std::cout << "Numero do offset " << nOffset << std::endl;
-  std::cout << "Numero do offset do fat 1 " << fat1ClusterOffset << std::endl;
-  std::cout << "Numero do offset do fat 2 " << fat2ClusterOffset << std::endl;
-  std::cout << "Numero do index do fat " << ((nOffset*4) + offSetFat1) % 512 << std::endl;
-  // printCluster(fatCluster);
-  fatCluster[((nOffset*4) + offSetFat1) % 512] = 0xff;
-  fatCluster[((nOffset*4) + offSetFat1) % 512 + 1] = 0xff;
-  fatCluster[((nOffset*4) + offSetFat1) % 512 + 2] = 0xff;
-  fatCluster[((nOffset*4) + offSetFat1) % 512 + 3] = 0x0F;
-  // printCluster(fatCluster);
-  writeCluster(fat1ClusterOffset, fatCluster);
-  writeCluster(fat2ClusterOffset, fatCluster);
+  // printCluster(fatSector);
+  // fatSector[((nOffset*4) + offSetFat1) % 512] = *(unsigned char*)END_OF_FILE;
+  printSector(fatSector);
+  memcpy(&fatSector[((nOffset*4) + offSetFat1) % 512], (unsigned char*)&END_OF_FILE, 4);
+  printSector(fatSector);
+  writeSector(fat1SectorOffset, fatSector);
+  writeSector(fat2SectorOffset, fatSector);
 
 }
 
-void Fat32::readDisk(){
-  std::fstream disk;
-  hardDrive.open(PENDRIVE_PATH, std::fstream::in | std::fstream::out | std::fstream::binary);
+// void Fat32::readDisk(){
+//   std::fstream disk;
+//   hardDrive.open(PENDRIVE_PATH, std::fstream::in | std::fstream::out | std::fstream::binary);
 
-  if(!hardDrive)
-    throw(std::runtime_error(PENDRIVE_PATH + errno));
+//   if(!hardDrive)
+//     throw(std::runtime_error(PENDRIVE_PATH + errno));
 
-  // char buffer[512];
+//   // char buffer[512];
 
-  // disk.read(&buffer[0], 512);
-  // printf("%02x %02x %d \n", (unsigned char)buffer[510], (unsigned char)buffer[511], *((unsigned short*)(&buffer[11])));
-}
+//   // disk.read(&buffer[0], 512);
+//   // printf("%02x %02x %d \n", (unsigned char)buffer[510], (unsigned char)buffer[511], *((unsigned short*)(&buffer[11])));
+// }

@@ -21,7 +21,7 @@ class Fat32 {
   public:
     Fat32(WCHAR* directoryFile);
     ~Fat32();
-    void readDisk();
+    void dismountVolume();
     void printSector(int offSet);
     void printSector(char* buffer);
     void printCluster(char* bufferCluster);
@@ -37,7 +37,6 @@ class Fat32 {
     void printFatInfos();
     FileInfo findArchiveOffset(std::deque<std::string> pathFileName, bool isDeleted, int clusterOffSet = 0);
     char* dirName;
-    std::fstream hardDrive;
     int bytesPerCluster;
     int bytesPerSector;
     int sectorPerCluster;
