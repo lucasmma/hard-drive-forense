@@ -5,10 +5,12 @@ bool Utils::contains(std::vector<int> c, int e) {
 }
 
 int Utils::calculateIntfromHighLow(int high, int low) {
-  std::cout << "high: " << high << std::endl;
-  std::cout << "low: " << low << std::endl;
+  if(DEBUG){
+    std::cout << "high: " << high << std::endl;
+    std::cout << "low: " << low << std::endl;
+  }
   // std::cout << "low: " << low << std::endl;
-    return (high * 65536) + low;
+    return (high * MAX_FILES) + low; // MAX_FILES = 256**2
 }
 
 std::deque<std::string> Utils::parsePath(char* pathFilename){

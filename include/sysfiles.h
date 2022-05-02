@@ -19,7 +19,7 @@
 #include "fat32.h"
 #include "utils.h"
 
-#define MAX_FILES 65534
+#define MAX_FILES 65536
 #define SECTOR_PER_CLUSTER 2
 #define NOT_FOUND 0
 #define DEBUG true
