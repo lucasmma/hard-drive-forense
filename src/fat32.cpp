@@ -238,7 +238,31 @@ std::vector<FileInfo> Fat32::getEmptyClusters(){
   return emptyClusters;
 }
 
-void Fat32::undeleteSingleClusterFile(char* filename){
+void Fat32::writeNumberOnFat(int fatOffSet, int numberToWrite, bool isFat1){
+  int fatSectorOffset;
+  int offSetOfFat;
+  if(isFat1){
+    offSetOfFat = offSetFat1;
+    fatSectorOffset = (fatOffSet*4) + offSetOfFat - (((fatOffSet*4) + offSetOfFat) % 512);
+  } else{
+    offSetOfFat = offSetFat2;
+    fatSectorOffset = (fatOffSet*4) + offSetOfFat - (((fatOffSet*4) + offSetOfFat) % 512);
+  }
+
+  char* fatSector = readSector(fatSectorOffset);
+  if(DEBUG){
+    std::cout << "Setor do Fat antes de alterar -> Fat" << (isFat1 ? "1" : "2") << std::endl;
+    printSector(fatSector);
+  }
+  memcpy(&fatSector[((fatOffSet*4) + offSetOfFat) % 512], (unsigned char*)&numberToWrite, 4);
+  if(DEBUG){
+    std::cout << "Setor do Fat alterada" << std::endl;
+    printSector(fatSector);
+  }
+  writeSector(fatSectorOffset, fatSector);
+}
+
+void Fat32::undeleteFile(char* filename){
   // para recuperar um arquivo pequeno
   // achar o offset
   FileInfo fileInfo = findArchiveOffset(Utils::parsePath(filename), true);
@@ -250,6 +274,7 @@ void Fat32::undeleteSingleClusterFile(char* filename){
   char* archiveCluster = readCluster(fileInfo.initialClusterOffSet);
   archiveCluster[fileInfo.clusterIndex] = Utils::parsePath(filename).back()[0];
   char* fileBuffer = readSector(fileInfo.startingFileAddress);
+  // não desdeleta arquivos sem conteudo
   if(fileBuffer[0] == 0){
     fileInfo.startingClusterArea+=MAX_FILES;
     fileInfo.startingFileAddress = ((fileInfo.startingClusterArea - 2) * bytesPerCluster) + offSetRootDirectory;
@@ -271,32 +296,17 @@ void Fat32::undeleteSingleClusterFile(char* filename){
   // escrever o cluster do arquivo
   writeCluster(fileInfo.initialClusterOffSet, archiveCluster);
   int nOffset = fileInfo.startingClusterArea;
-  int fat1SectorOffset = (nOffset*4) + offSetFat1 - (((nOffset*4) + offSetFat1) % 512);
-  int fat2SectorOffset = (nOffset*4) + offSetFat2 - (((nOffset*4) + offSetFat2) % 512);
-  char* fatSector = readSector(fat1SectorOffset);
   if(DEBUG){
     std::cout << "Numero do offset " << nOffset << std::endl;
-    std::cout << "Numero do offset do fat 1 " << fat1SectorOffset << std::endl;
-    std::cout << "Numero do offset do fat 2 " << fat2SectorOffset << std::endl;
     std::cout << "Numero do index do fat " << ((nOffset*4) + offSetFat1) % 512 << std::endl;
-    std::cout << "Setor do Fat Antes de alterar" << std::endl;
-    printSector(fatSector);
   }
   // escrever na fat se é o fim do arquivo ou não
-  // Criar uma função que escreve na fat
   if (fileInfo.fileSize > 1024){
     // get availables cluster
     // Match cluster content with content gived
     // Match cluster content with content gived
   } else{
-    memcpy(&fatSector[((nOffset*4) + offSetFat1) % 512], (unsigned char*)&END_OF_FILE, 4);
+    writeNumberOnFat(nOffset, END_OF_FILE, true);
+    writeNumberOnFat(nOffset, END_OF_FILE, false);
   }
-  
-  if(DEBUG){
-    std::cout << "Setor do Fat" << std::endl;
-    printSector(fatSector);
-  }
-  writeSector(fat1SectorOffset, fatSector);
-  writeSector(fat2SectorOffset, fatSector);
-
 }

@@ -24,7 +24,7 @@ class Fat32 {
     void printSector(int offSet);
     void printSector(char* buffer);
     void printCluster(char* bufferCluster);
-    void undeleteSingleClusterFile(char* filename);
+    void undeleteFile(char* filename);
     std::vector<FileInfo> getEmptyClusters();
     char* readSector(int offSet);
     char* readCluster(int offSet);
@@ -32,6 +32,7 @@ class Fat32 {
     int getIntFromFatN(int offSet);
     void writeSector(int offSet, char* bufferSector);
     void writeCluster(int offSet, char* bufferCluster);
+    void writeNumberOnFat(int fatOffSet, int numberToWrite, bool isFat1);
     void printFatInfos();
     FileInfo findArchiveOffset(std::deque<std::string> pathFileName, bool isDeleted, int clusterOffSet = 0);
     char* dirName;
