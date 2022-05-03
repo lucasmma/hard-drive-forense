@@ -21,7 +21,6 @@ class Fat32 {
   public:
     Fat32(WCHAR* directoryFile);
     ~Fat32();
-    void dismountVolume();
     void printSector(int offSet);
     void printSector(char* buffer);
     void printCluster(char* bufferCluster);
@@ -32,8 +31,6 @@ class Fat32 {
     int getIntFromFatN(int offSet);
     void writeSector(int offSet, char* bufferSector);
     void writeCluster(int offSet, char* bufferCluster);
-    void fillInfo();
-    void setUpFat(WCHAR* directoryName);
     void printFatInfos();
     FileInfo findArchiveOffset(std::deque<std::string> pathFileName, bool isDeleted, int clusterOffSet = 0);
     char* dirName;
@@ -48,6 +45,9 @@ class Fat32 {
   private:
     HANDLE _device; 
     char _currentBuffer[512];
+    void dismountVolume();
+    void fillInfo();
+    void setUpFat(WCHAR* directoryName);
 };
 
 #endif
