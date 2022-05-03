@@ -24,7 +24,8 @@ class Fat32 {
     void printSector(int offSet);
     void printSector(char* buffer);
     void printCluster(char* bufferCluster);
-    void undeleteFile(char* filename);
+    void undeleteSingleClusterFile(char* filename);
+    std::vector<FileInfo> getEmptyClusters();
     char* readSector(int offSet);
     char* readCluster(int offSet);
     int getFatNfromOffset(int offSet);

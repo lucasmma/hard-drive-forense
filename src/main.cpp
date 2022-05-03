@@ -130,7 +130,7 @@ int main (int argc, char const **argv) {
         char tmp[50];
         std::cout << "Digite o path do arquivo para ser desdeletado: ";
         std::cin >> tmp;
-        fat.undeleteFile(tmp);
+        fat.undeleteSingleClusterFile(tmp);
       } else if (number == 5){
         char tmp[50];
         std::cout << "Digite o path do arquivo: ";

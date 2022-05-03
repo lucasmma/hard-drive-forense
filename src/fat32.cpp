@@ -232,7 +232,13 @@ FileInfo Fat32::findArchiveOffset(std::deque<std::string> pathFileName, bool isD
   }
 }
 
-void Fat32::undeleteFile(char* filename){
+// pegar os clusters vazios
+std::vector<FileInfo> Fat32::getEmptyClusters(){
+  std::vector<FileInfo> emptyClusters;
+  return emptyClusters;
+}
+
+void Fat32::undeleteSingleClusterFile(char* filename){
   // para recuperar um arquivo pequeno
   // achar o offset
   FileInfo fileInfo = findArchiveOffset(Utils::parsePath(filename), true);
