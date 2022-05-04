@@ -356,9 +356,6 @@ void Fat32::undeleteFile(char* filename){
     // get availables cluster
     // Match cluster content with content gived
     std::vector<FatInfo> orderedClusters = filterAndParseEmptyClusters();
-    if(orderedClusters.size() * bytesPerCluster != fileInfo.fileSize){
-      std::cout << "O numero de clusters achado é diferente com o tamanho do arquivo" << std::endl;
-    }
     if(DEBUG){
       std::cout << "Numero de clusters a ser salvo" << std::endl;
     }
@@ -375,4 +372,7 @@ void Fat32::undeleteFile(char* filename){
     writeNumberOnFat(nOffset, END_OF_FILE, true);
     writeNumberOnFat(nOffset, END_OF_FILE, false);
   }
+  std::cout << "-----------------------------------" << std::endl;
+  std::cout << "| Arquivo desdeletado com sucesso |" << std::endl;
+  std::cout << "-----------------------------------" << std::endl;
 }
