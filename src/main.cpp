@@ -63,6 +63,12 @@ void setupPendrive() {
     }
   }
   std::cout << "Criou os 10 arquivos finais" << std::endl;
+  Sysfiles::deleteFile("E:\\102.txt");
+  std::cout << "Deletou o arquivo 102.txt (3 arquivo criado)" << std::endl;
+  Sysfiles::deleteFile("E:\\104.txt");
+  std::cout << "Deletou o arquivo 104.txt (5 arquivo criado)" << std::endl;
+  Sysfiles::deleteFile("E:\\106.txt");
+  std::cout << "Deletou o arquivo 106.txt (7 arquivo criado)" << std::endl;
 }
 
 void findOffsetOfFile(Fat32* fat, char* path, bool isDeleted = false){
@@ -141,7 +147,7 @@ int main (int argc, char const **argv) {
         exit = true;
         std::cout << "Good Bye!" << std::endl; 
       } else{
-        std::cout << std::endl << "Digite um número de 0 a 4" << std::endl;
+        std::cout << std::endl << "Digite um número de 0 a 6" << std::endl;
       }
     }
     // Fat32 *fat = new Fat32(hardDrivePath);
