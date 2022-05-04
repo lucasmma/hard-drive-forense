@@ -17,6 +17,11 @@ struct FileInfo {
     int bitFieldAttribute;
 };
 
+struct FatInfo {
+    int fatNumber;
+    int nextStartingClusterArea;
+};
+
 class Fat32 {
   public:
     Fat32(WCHAR* directoryFile);
@@ -25,7 +30,8 @@ class Fat32 {
     void printSector(char* buffer);
     void printCluster(char* bufferCluster);
     void undeleteFile(char* filename);
-    std::vector<FileInfo> getEmptyClusters();
+    std::vector<int> getEmptyClustersOnFat();
+    std::vector<int> filterClusters(std::vector<int> clustersIndex);
     char* readSector(int offSet);
     char* readCluster(int offSet);
     int getFatNfromOffset(int offSet);
@@ -34,6 +40,7 @@ class Fat32 {
     void writeCluster(int offSet, char* bufferCluster);
     void writeNumberOnFat(int fatOffSet, int numberToWrite, bool isFat1);
     void printFatInfos();
+    std::vector<FatInfo> filterAndParseEmptyClusters();
     FileInfo findArchiveOffset(std::deque<std::string> pathFileName, bool isDeleted, int clusterOffSet = 0);
     char* dirName;
     int bytesPerCluster;

@@ -23,6 +23,7 @@
 #define SECTOR_PER_CLUSTER 2
 #define NOT_FOUND 0
 #define DEBUG true
+#define CONTENT_PENDRIVE 'i'
 #define PENDRIVE_PATH "\\\\.\\E:"
 static const unsigned int END_OF_FILE = 268435455;
 

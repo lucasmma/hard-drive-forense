@@ -233,8 +233,23 @@ FileInfo Fat32::findArchiveOffset(std::deque<std::string> pathFileName, bool isD
 }
 
 // pegar os clusters vazios
-std::vector<FileInfo> Fat32::getEmptyClusters(){
-  std::vector<FileInfo> emptyClusters;
+std::vector<int> Fat32::getEmptyClustersOnFat(){
+  std::vector<int> emptyClusters;
+  // ler de qualquer uma das fats pq não muda nada
+  for(int i = 0; i < countSectorPerFat; i++){
+    int fatSectorOffset = offSetFat1 + (i * 512);
+    char* fatSector = readSector(fatSectorOffset);
+    // 128 spots por cluster
+    for (int j = 0; j < 128; j++){
+      int zero = 0;
+      if(memcmp(&(fatSector[j*4]), (unsigned char*) &zero, 4) == 0){
+        if(DEBUG){
+          std::cout << "Adicionou o Cluster " << ((128 * i )+ j) << " como vazio" << std::endl;
+        }
+        emptyClusters.push_back((128 * i )+ j);
+      }
+    }
+  }
   return emptyClusters;
 }
 
@@ -252,14 +267,50 @@ void Fat32::writeNumberOnFat(int fatOffSet, int numberToWrite, bool isFat1){
   char* fatSector = readSector(fatSectorOffset);
   if(DEBUG){
     std::cout << "Setor do Fat antes de alterar -> Fat" << (isFat1 ? "1" : "2") << std::endl;
-    printSector(fatSector);
+    // printSector(fatSector);
   }
   memcpy(&fatSector[((fatOffSet*4) + offSetOfFat) % 512], (unsigned char*)&numberToWrite, 4);
   if(DEBUG){
     std::cout << "Setor do Fat alterada" << std::endl;
-    printSector(fatSector);
+    // printSector(fatSector);
   }
   writeSector(fatSectorOffset, fatSector);
+}
+
+std::vector<int> Fat32::filterClusters(std::vector<int> clustersIndex) { 
+  // compare only 2 firsts chars
+  char contentPendrive[2];
+  contentPendrive[0] = CONTENT_PENDRIVE;
+  contentPendrive[1] = CONTENT_PENDRIVE;
+  std::vector<int> filteredClusters;
+  for (int i = 0; i < clustersIndex.size(); i++){
+    int clusterIndex = clustersIndex[i];
+    int fileAddress = ((clusterIndex - 2) * bytesPerCluster) + offSetRootDirectory;
+    char* file = readCluster(fileAddress);
+    if(memcmp(file, contentPendrive, 2) == 0){
+      filteredClusters.push_back(clusterIndex);
+    }
+  }
+  return filteredClusters;
+}
+
+std::vector<FatInfo> Fat32::filterAndParseEmptyClusters(){
+  std::vector<int> emptyClusters = getEmptyClustersOnFat();
+  std::vector<int> filteredClusters = filterClusters(emptyClusters);
+  std::vector<FatInfo> orderedFatInfos;
+  for (int i = 0; i < filteredClusters.size(); i++){
+    FatInfo fatInfo;
+    if(i + 1 < filteredClusters.size()){
+      fatInfo.fatNumber = filteredClusters[i];
+      fatInfo.nextStartingClusterArea = filteredClusters[i + 1];
+    } else{
+      fatInfo.fatNumber = filteredClusters[i];
+      fatInfo.nextStartingClusterArea = END_OF_FILE;
+    }
+    orderedFatInfos.push_back(fatInfo);
+  }
+  return orderedFatInfos;
+  
 }
 
 void Fat32::undeleteFile(char* filename){
@@ -304,7 +355,22 @@ void Fat32::undeleteFile(char* filename){
   if (fileInfo.fileSize > 1024){
     // get availables cluster
     // Match cluster content with content gived
-    // Match cluster content with content gived
+    std::vector<FatInfo> orderedClusters = filterAndParseEmptyClusters();
+    if(orderedClusters.size() * bytesPerCluster != fileInfo.fileSize){
+      std::cout << "O numero de clusters achado é diferente com o tamanho do arquivo" << std::endl;
+    }
+    if(DEBUG){
+      std::cout << "Numero de clusters a ser salvo" << std::endl;
+    }
+    for (int i = 0; i < orderedClusters.size(); i++){
+      if(DEBUG){
+        std::cout << "Numero do cluster criado " << i << std::endl;
+      }
+      FatInfo currentCluster = orderedClusters[i]; 
+      writeNumberOnFat(currentCluster.fatNumber, currentCluster.nextStartingClusterArea, true);
+      writeNumberOnFat(currentCluster.fatNumber, currentCluster.nextStartingClusterArea, false);
+    }
+    
   } else{
     writeNumberOnFat(nOffset, END_OF_FILE, true);
     writeNumberOnFat(nOffset, END_OF_FILE, false);
